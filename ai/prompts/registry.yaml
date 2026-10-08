@@ -1,0 +1,11 @@
+prompts:
+  validation:
+    active_version: "v3"
+    versions:
+      v1: "ai/prompts/validation/v1.md"
+      v2: "ai/prompts/validation/v2.md"
+      v3: "ai/prompts/validation/v3.md"
+  generation:
+    active_version: "v3"
+    versions:
+      v3: "prompts/agent_c_test_case_gen.txt"

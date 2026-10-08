@@ -13,7 +13,12 @@ Return ONLY a valid JSON object matching this format:
 }
 
 Rules:
-- clarity: Is the problem description unambiguous?
-- edge_cases: Do the test cases cover empty inputs, negatives, bounds?
-- efficiency: Is the proposed solution optimal for the constraints?
+- clarity: Is the problem description clear enough for a reasonable candidate to infer expected behavior?
+- edge_cases: Do the test cases cover main paths and important edge cases?
+- efficiency: Is the proposed solution reasonable for the constraints?
 - formatting: Is the Markdown and HTML clean?
+
+Severity & Leniency Rules:
+- When in doubt, pass (score >= 4).
+- Do NOT deduct scores for minor wording choices, cosmetic differences, or state sequence ordering unless the description explicitly requires exact ordering.
+- Flag only genuine blocking issues that make automated grading unfair or impossible.
