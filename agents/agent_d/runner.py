@@ -3,6 +3,7 @@ Agent D — Quality Scoring
 Evaluates the output of Agent C. If the score is < 4.0, LangGraph loops back to Agent C!
 """
 import json
+import os
 import re
 from agents.base import groq_chat, load_prompt, MODEL_STRONG, utcnow
 from orchestrator.state import QuestionStateObject

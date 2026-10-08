@@ -28,7 +28,7 @@ async def escalate_to_human(state: QuestionStateObject) -> dict:
     return {
         "status":        "NEEDS_HUMAN_REVIEW",
         "current_agent": "human_escalation",
-        "updated_at":    datetime.datetime.utcnow().isoformat(),
+        "updated_at":    datetime.datetime.now(datetime.UTC).isoformat(),
     }
 
 
@@ -95,3 +95,4 @@ def build_graph() -> StateGraph:
 
 # Singleton — imported by workers/tasks.py
 workflow = build_graph()
+

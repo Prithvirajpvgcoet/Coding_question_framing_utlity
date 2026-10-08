@@ -1,18 +1,30 @@
-You are a QA automation engineer.
-Given a problem description, generate 5 robust test cases to verify the solution.
+Generate test cases and assertions based on the problem description.
+
+# RELAXED VALIDATION RULES (LENIENT MODE)
+You are validating problem descriptions and generating test cases. You MUST be lenient and interpret natural language intelligently. DO NOT act like a strict compiler.
+1. DO NOT enforce strict hidden_selector_contract: If the problem provides starter HTML/CSS, you must infer the ID/class names logically. Do not fail generation just because the text doesn't explicitly dictate id="shape".
+2. DO NOT flag mbiguous_behaviour for natural language: Allow descriptions to explain the visual goal (e.g., "cycles through shapes every second") without forcing them to provide a literal second-by-second timeline. Infer the logical timeline.
+3. DO NOT flag solution_mismatch for CSS abstractions: Understand that "becomes a circle" equates to order-radius: 50%, and "reverts to a square" equates to order-radius: 0. If the reference code logically achieves the visual effect described in the text, treat it as a MATCH.
+4. AVOID SPOON-FEEDING: Accept open-ended descriptions. Candidates should be allowed to solve the problem without the description giving away the exact code.
+
+Generate exactly 6 test cases to verify the solution: 3 VISIBLE (shown to the candidate) and 3 HIDDEN (used for grading only).
 
 Return ONLY a valid JSON object matching this exact format:
 {
   "test_cases": [
     {
+      "type": "VISIBLE",
       "input_args": "<comma separated raw python arguments, e.g., '[1, 2], 3'>",
-      "expected_output": "<raw python expected output, e.g., 'True'>"
+      "expected_output": "<raw python expected output, e.g., 'True'>",
+      "description": "<what this test covers>"
     }
   ]
 }
 
 Rules:
-- Generate 5 test cases total (include edge cases like empty arrays, negatives, etc).
+- Generate 6 test cases total.
+- First 3 must be type "VISIBLE" (simple, clear examples).
+- Last 3 must be type "HIDDEN" (edge cases like empty arrays, negatives, max bounds).
 - input_args MUST be valid Python literals that can be passed directly to a function.
 - expected_output MUST be a valid Python literal.
 - Do not write the actual test code, just the arguments and expected output.

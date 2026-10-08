@@ -18,5 +18,9 @@ celery_app.conf.update(
     result_serializer='json',
     timezone='UTC',
     enable_utc=True,
-    task_always_eager=True,
+    task_time_limit=180,
+    task_soft_time_limit=150,
+    task_acks_late=True,
+    worker_prefetch_multiplier=1,
+    result_expires=3600,
 )
