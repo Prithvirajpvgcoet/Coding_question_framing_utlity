@@ -37,13 +37,8 @@ def prompt_hash(prompt: str) -> str:
 
 
 def _compute_cost(model: str, input_tokens: int, output_tokens: int) -> float:
-    PRICING = {
-        "llama-3.3-70b-versatile": {"input": 0.59,  "output": 0.79},
-        "qwen/qwen3.6-27b":        {"input": 0.60,  "output": 3.00},
-        "gpt-oss-20b":             {"input": 0.075, "output": 0.30},
-        "llama-3.1-8b-instant":    {"input": 0.05,  "output": 0.08},
-    }
-    p = PRICING.get(model, {"input": 0.59, "output": 0.79})
+    from observability.cost_tracker import COST_PER_1M
+    p = COST_PER_1M.get(model, {"input": 0.59, "output": 0.79})
     return (input_tokens / 1_000_000 * p["input"]) + \
            (output_tokens / 1_000_000 * p["output"])
 

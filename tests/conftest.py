@@ -9,7 +9,7 @@ import datetime
 @pytest.fixture
 def sample_state():
     """Minimal valid QSO for unit tests."""
-    now = datetime.datetime.utcnow().isoformat()
+    now = datetime.datetime.now(datetime.UTC).isoformat()
     return {
         "request_id":           "test-request-001",
         "question_id":          "test-question-001",

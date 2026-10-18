@@ -7,10 +7,14 @@ EXEMPT_PATHS = {"/health", "/docs", "/openapi.json", "/redoc"}
 
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+        # Allow CORS preflight requests without authentication
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
         if request.url.path in EXEMPT_PATHS:
             return await call_next(request)
 
-        api_key = request.headers.get("X-API-Key")
+        api_key = request.headers.get("X-API-Key") or request.query_params.get("api_key")
         if not api_key:
             return JSONResponse({"detail": "Missing X-API-Key header"}, status_code=401)
 

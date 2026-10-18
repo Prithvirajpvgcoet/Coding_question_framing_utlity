@@ -22,10 +22,20 @@ class Client(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)
     updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
+class QuestionBank(Base):
+    __tablename__ = "question_banks"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    client_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("clients.id"), nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    imocha_bank_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+
 class Question(Base):
     __tablename__ = "questions"
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     client_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("clients.id"), nullable=False)
+    bank_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("question_banks.id"), nullable=True)
     version: Mapped[int] = mapped_column(Integer, default=1)
     status: Mapped[str] = mapped_column(String, nullable=False, default="PROCESSING")
     state: Mapped[dict] = mapped_column(JSONB, default={})
@@ -59,4 +69,35 @@ class AgentRun(Base):
     retry_count: Mapped[int] = mapped_column(Integer, default=0)
     internal_step: Mapped[bool] = mapped_column(Boolean, default=False)
     error_detail: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+
+class UploadJob(Base):
+    __tablename__ = "upload_jobs"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    client_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("clients.id"), nullable=False)
+    question_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("questions.id"), nullable=False)
+    bank_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    status: Mapped[str] = mapped_column(String, nullable=False, default="QUEUED")  # QUEUED, IN_PROGRESS, COMPLETED, FAILED
+    queue_position: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    payload_json: Mapped[dict] = mapped_column(JSONB, default={})
+    steps_log: Mapped[list] = mapped_column(JSONB, default=[])
+    error: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    started_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+
+class ReferenceDocument(Base):
+    __tablename__ = "reference_documents"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    client_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("clients.id"), nullable=False)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    doc_type: Mapped[str] = mapped_column(String, nullable=False, default="DOMAIN_SCENARIO")
+    format: Mapped[str] = mapped_column(String, nullable=False, default="json")
+    topic: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    subtopic: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    difficulty: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    domain: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    tags: Mapped[list] = mapped_column(JSONB, default=[])
+    raw_content: Mapped[str] = mapped_column(String, nullable=False)
+    structured_data: Mapped[dict] = mapped_column(JSONB, default={})
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)

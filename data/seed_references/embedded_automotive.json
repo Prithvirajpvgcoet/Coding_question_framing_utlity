@@ -1,0 +1,34 @@
+[
+  {
+    "title": "CAN-Bus Telemetry Frame Ring Buffer",
+    "topic": "Arrays",
+    "subtopic": "Circular Buffer",
+    "difficulty": "MEDIUM",
+    "domain": "Embedded Systems / Automotive IoT",
+    "tags": ["embedded", "can_bus", "circular_buffer", "queue", "automotive"],
+    "scenario": "An Electronic Control Unit (ECU) in a connected vehicle receives high-frequency Controller Area Network (CAN) bus telemetry frames (speed, RPM, brake pressure, battery voltage) over an interrupt line. The onboard MCU has constrained memory and must log telemetry frames into a fixed-size ring buffer without dynamically allocating memory or dropping critical emergency priority frames.",
+    "algorithmic_pattern": "Circular Queue / Ring Buffer using head and tail index wrap-around with modular arithmetic.",
+    "sample_constraints": [
+      "Fixed capacity N up to 4096 frames",
+      "O(1) enqueue and dequeue operations without heap allocations",
+      "Priority frames (ID < 0x100) must overwrite standard frames when buffer is full"
+    ],
+    "example_problem_flavor": "Implement a real-time TelemetryRingBuffer with push(), pop(), and peek_emergency() operations conforming to strict memory limits."
+  },
+  {
+    "title": "Temperature Sensor Outlier Noise Filter",
+    "topic": "Two Pointers",
+    "subtopic": "Sliding Window",
+    "difficulty": "EASY",
+    "domain": "Embedded Systems / Sensor Processing",
+    "tags": ["sensors", "iot", "moving_average", "two_pointers", "filtering"],
+    "scenario": "Industrial temperature probes in a battery management system suffer from transient electromagnetic spikes that introduce corrupted outlier readings. A real-time moving window median/average filter is applied to the digital signal stream before sending data to the battery cooling controller.",
+    "algorithmic_pattern": "Sliding Window with moving sum or two pointers for window boundary maintenance.",
+    "sample_constraints": [
+      "Window size K between 3 and 101 (odd numbers)",
+      "Continuous data stream of up to 100,000 sensor readings",
+      "Return the smoothed sensor signal sequence"
+    ],
+    "example_problem_flavor": "Filter noise spikes from a digital sensor stream by replacing sudden transient spikes with the local moving average."
+  }
+]

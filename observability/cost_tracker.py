@@ -1,4 +1,4 @@
-"""Per-question LLM cost accumulation — Groq pricing."""
+"""Per-question LLM cost accumulation - Groq pricing."""
 
 COST_PER_1M = {
     # Keys must exactly match MODEL_STRONG / MODEL_CODE / MODEL_CHEAP env values
@@ -17,10 +17,12 @@ MODEL_ROLES = {
     "openai/gpt-oss-20b":  "cheap",
 }
 
+
 def compute_cost(model: str, input_tokens: int, output_tokens: int) -> float:
     p = COST_PER_1M.get(model, {"input": 0.59, "output": 0.79})
     return (input_tokens / 1_000_000 * p["input"]) + \
            (output_tokens / 1_000_000 * p["output"])
+
 
 def estimate_question_cost() -> dict:
     return {

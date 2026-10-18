@@ -1,0 +1,48 @@
+[
+  {
+    "title": "Flash Sale Inventory Lock & Reservation Engine",
+    "topic": "Hash Maps",
+    "subtopic": "Priority Queue",
+    "difficulty": "MEDIUM",
+    "domain": "E-Commerce / Inventory",
+    "tags": ["ecommerce", "inventory", "heap", "priority_queue", "reservation"],
+    "scenario": "During a flash sale event, tens of thousands of shoppers add limited-stock SKUs to their cart. Each cart item is granted a 10-minute temporary inventory reservation. If the customer does not checkout within 10 minutes, the reserved inventory must immediately expire and be reallocated to the next customer waiting in the priority queue.",
+    "algorithmic_pattern": "Min-Heap for reservation TTL expiration coupled with a Hash Map for SKU stock counters.",
+    "sample_constraints": [
+      "Process up to 200,000 reservation events",
+      "Immediate stock availability check in O(1) time",
+      "Reallocation of expired items in O(log K) time"
+    ],
+    "example_problem_flavor": "Given sequential operations (RESERVE, CHECKOUT, CANCEL) with timestamps, maintain active inventory counts and return the list of items reclaimed due to timeout."
+  },
+  {
+    "title": "Warehouse Automated Picking Route Optimization",
+    "topic": "Dynamic Programming",
+    "subtopic": "Bitmask DP",
+    "difficulty": "HARD",
+    "domain": "Supply Chain / Warehouse Logistics",
+    "tags": ["logistics", "warehouse", "dp", "bitmask", "tsp"],
+    "scenario": "An autonomous mobile robot (AMR) in an automated fulfillment center receives a customer order batch containing items located in N distinct shelf bins on a 2D warehouse grid. The robot must start from the packing station, visit every shelf bin holding an order item, and return to the packing station with minimal travel distance.",
+    "algorithmic_pattern": "Shortest path BFS/Dijkstra combined with Travelling Salesperson Problem (TSP) using Bitmask Dynamic Programming.",
+    "sample_constraints": [
+      "Number of item shelf locations N <= 16",
+      "Warehouse grid dimensions up to 100x100 with blocked aisles"
+    ],
+    "example_problem_flavor": "Compute the minimum Manhattan distance path for an AMR to collect all K target goods and return to base."
+  },
+  {
+    "title": "Shipment Package Weight Bin Packing",
+    "topic": "Greedy",
+    "subtopic": "Sorting",
+    "difficulty": "MEDIUM",
+    "domain": "Logistics / Shipping",
+    "tags": ["shipping", "bin_packing", "greedy", "sorting", "two_pointers"],
+    "scenario": "An air freight logistics courier needs to load parcels into standardized cargo shipping containers. Each container has a maximum weight capacity W. To optimize freight costs, the packer must fit as many parcels as possible into the fewest number of containers.",
+    "algorithmic_pattern": "Greedy Best-Fit Decreasing or First-Fit Decreasing with Two Pointers / Binary Search.",
+    "sample_constraints": [
+      "Parcels array length up to 50,000 items",
+      "Max weight capacity W up to 10,000 kg"
+    ],
+    "example_problem_flavor": "Determine the minimum number of cargo containers required to pack all packages without exceeding weight constraints."
+  }
+]

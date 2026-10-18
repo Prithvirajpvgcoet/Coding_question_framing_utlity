@@ -2,15 +2,30 @@ from services.sandbox_client import run_in_sandbox
 
 async def execute_and_verify(code: str, language: str, test_cases: list) -> dict:
     if language.lower() != "python":
-        return {"passed": True, "feedback": "Skipped for non-python"}
+        return await run_in_sandbox(code, language)
         
     # Combine the AI's code with an automated test runner!
     test_script = code + "\n\n# --- AUTOMATED TESTS ---\n"
     test_script += "if __name__ == '__main__':\n"
     
     for i, tc in enumerate(test_cases):
-        args = tc.get("input_args", "")
-        expected = tc.get("expected_output", "")
+        args = tc.get("input_args")
+        if args is None and "inputs" in tc:
+            inputs_val = tc["inputs"]
+            if isinstance(inputs_val, dict):
+                args = ", ".join(repr(v) for v in inputs_val.values())
+            elif isinstance(inputs_val, list):
+                args = ", ".join(repr(v) for v in inputs_val)
+            else:
+                args = repr(inputs_val)
+        elif args is None:
+            args = ""
+
+        expected = tc.get("expected_output")
+        if expected is None and "expected" in tc:
+            expected = repr(tc["expected"])
+        elif expected is None:
+            expected = "None"
         
         test_script += f"    try:\n"
         test_script += f"        res = solution({args})\n"

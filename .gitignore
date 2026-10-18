@@ -1,2 +1,42 @@
-
+# Environments and Secrets
 .env
+.env.*
+!.env.example
+.venv/
+env/
+venv/
+ENV/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Database & Logs
+*.db
+*.sqlite3
+*.log
+
+# Frontend (Next.js)
+frontend/node_modules/
+frontend/.next/
+frontend/.env*.local
+frontend/out/
+frontend/build/
+
+# Playwright & End-to-End
+playwright-report/
+test-results/
+
+# OS artifacts
+.DS_Store
+Thumbs.db

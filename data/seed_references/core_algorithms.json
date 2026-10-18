@@ -1,0 +1,47 @@
+[
+  {
+    "title": "Distributed In-Memory LRU Cache with TTL Expiry",
+    "topic": "Hash Maps",
+    "subtopic": "Linked Lists",
+    "difficulty": "MEDIUM",
+    "domain": "Distributed Systems / Backend Caching",
+    "tags": ["caching", "lru", "doubly_linked_list", "hash_map", "ttl"],
+    "scenario": "A high-scale API gateway caches microservice responses to protect downstream databases. Cache entries have an expiration TTL as well as an overall capacity limit. When full, the cache must evict the least recently used (LRU) non-expired key, or proactively reclaim expired keys.",
+    "algorithmic_pattern": "Hash Map mapping keys to Doubly Linked List nodes for O(1) get and put, with secondary timestamp checking.",
+    "sample_constraints": [
+      "Capacity limit up to 100,000 keys",
+      "Strict O(1) average time complexity for both get(key) and put(key, value, ttl)"
+    ],
+    "example_problem_flavor": "Design an LRUCacheWithTTL supporting get(key), put(key, val, ttl), and prune_expired()."
+  },
+  {
+    "title": "Microservices Dependency Build Order & Cycle Detection",
+    "topic": "Graphs",
+    "subtopic": "Topological Sort",
+    "difficulty": "MEDIUM",
+    "domain": "Cloud Infrastructure / DevOps",
+    "tags": ["graphs", "topological_sort", "devops", "dag", "cycle_detection"],
+    "scenario": "A cloud deployment orchestrator deploys a mesh of microservices with interdependent startup requirements (e.g. Auth Service must initialize before User Service). The orchestrator must compute a valid linear deployment order or detect circular dependency deadlocks before starting container provisioning.",
+    "algorithmic_pattern": "Directed Acyclic Graph (DAG) Topological Sort using Kahn's Algorithm (in-degree array) or DFS with cycle coloring.",
+    "sample_constraints": [
+      "Number of microservices V <= 10,000",
+      "Number of directed dependency edges E <= 50,000"
+    ],
+    "example_problem_flavor": "Given service dependency pairs, return a valid initialization sequence, or an empty list if a dependency cycle is detected."
+  },
+  {
+    "title": "Search Query Autocomplete Trie with Popularity Frequency",
+    "topic": "Trees",
+    "subtopic": "Trie",
+    "difficulty": "HARD",
+    "domain": "Search Engines / Information Retrieval",
+    "tags": ["trie", "trees", "heap", "autocomplete", "search"],
+    "scenario": "An enterprise search bar provides instant typeahead suggestions as a user types characters. For each prefix typed, the engine must return the top 3 most frequently searched historical search queries matching that prefix.",
+    "algorithmic_pattern": "Prefix Tree (Trie) where each node maintains top K query references, or Trie traversal combined with a Min-Heap.",
+    "sample_constraints": [
+      "Vocabulary up to 500,000 distinct query strings",
+      "Prefix query latency must be under 5ms (O(L) where L is prefix length)"
+    ],
+    "example_problem_flavor": "Design an AutocompleteSystem that ingests query frequencies and returns top-3 suggestions for any prefix string."
+  }
+]

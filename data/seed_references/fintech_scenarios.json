@@ -1,0 +1,63 @@
+[
+  {
+    "title": "Payment Transaction Idempotency & Deduplication",
+    "topic": "Hash Maps",
+    "subtopic": "Sliding Window",
+    "difficulty": "MEDIUM",
+    "domain": "FinTech / Payment Gateways",
+    "tags": ["fintech", "payments", "idempotency", "hash_map", "sliding_window"],
+    "scenario": "A payment gateway processes millions of incoming authorization webhooks per hour. Network retries can cause identical idempotency keys to arrive multiple times. The system must verify whether an idempotency key was received within a dynamic TTL window, check payload hashes for parameter tampering, and output authorization decisions without blocking concurrent traffic.",
+    "algorithmic_pattern": "Hash Map with Sliding Window timestamp expiration or Monotonic Queue.",
+    "sample_constraints": [
+      "Process up to 100,000 transactions with O(1) average lookup per transaction",
+      "Reject duplicate idempotency keys if received within 300 seconds",
+      "Flag mismatch if idempotency key matches but transaction amount differs"
+    ],
+    "example_problem_flavor": "Design a High-Throughput Transaction Validator that accepts a stream of (timestamp, idempotency_key, amount_cents) and flags DUPLICATE, TAMPERED, or ACCEPTED."
+  },
+  {
+    "title": "Real-Time Card Fraud Velocity Detector",
+    "topic": "Sliding Window",
+    "subtopic": "Queues",
+    "difficulty": "HARD",
+    "domain": "FinTech / Fraud Risk",
+    "tags": ["fraud", "sliding_window", "deque", "risk_engine"],
+    "scenario": "A credit card fraud engine monitors transactions across merchant categories. If a card experiences more than K transactions exceeding a risk threshold within any consecutive W-minute window, subsequent transactions must trigger an immediate card lock.",
+    "algorithmic_pattern": "Sliding Window using a deque or timestamped linked list with prefix sums for cumulative amount checking.",
+    "sample_constraints": [
+      "Window size W up to 86400 seconds (24h)",
+      "Strict O(N) aggregate processing time across streaming inputs"
+    ],
+    "example_problem_flavor": "Given a chronological stream of card authorizations, return the exact timestamp intervals during which the card was blocked due to velocity breach."
+  },
+  {
+    "title": "Double-Entry Ledger Account Reconciliation",
+    "topic": "Arrays",
+    "subtopic": "Two Pointers",
+    "difficulty": "EASY",
+    "domain": "FinTech / Accounting",
+    "tags": ["ledger", "arrays", "two_pointers", "reconciliation"],
+    "scenario": "An automated core banking ledger ingests debit and credit transaction feeds from external clearinghouses. The daily reconciliation system must pair matching debit and credit entries having complementary transaction identifiers and zero net sum.",
+    "algorithmic_pattern": "Two pointers on sorted transaction amounts or two-sum hash map lookup.",
+    "sample_constraints": [
+      "Ledger balances must reconcile to exact cents with no floating point errors",
+      "Entries may range from 1 to 50,000 records"
+    ],
+    "example_problem_flavor": "Find all paired offsetting debit/credit ledger lines and return unbalanced orphan transactions."
+  },
+  {
+    "title": "Foreign Exchange Arbitrage Path Detection",
+    "topic": "Graphs",
+    "subtopic": "Shortest Path",
+    "difficulty": "HARD",
+    "domain": "FinTech / FX Trading",
+    "tags": ["graphs", "fx", "trading", "bellman_ford", "cycle_detection"],
+    "scenario": "An institutional currency desk maintains real-time bid/ask rates across multiple fiat currencies (USD, EUR, GBP, JPY). Fluctuations in exchange rates occasionally create negative cycles where trading sequentially along a currency chain yields a net positive return (arbitrage).",
+    "algorithmic_pattern": "Directed Graph with logarithmic negative weights; Bellman-Ford negative cycle detection.",
+    "sample_constraints": [
+      "Up to 50 supported currency pairs with floating exchange multipliers",
+      "Detect if an arbitrage cycle exists and return the cyclic conversion sequence"
+    ],
+    "example_problem_flavor": "Given currency exchange matrix R, find if any conversion loop returns > 1.0001x the initial principal."
+  }
+]

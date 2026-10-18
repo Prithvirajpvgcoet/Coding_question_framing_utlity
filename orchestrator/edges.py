@@ -10,11 +10,11 @@ MAX_REVISION_CYCLES  = int(os.getenv("MAX_REVISION_CYCLES", 5))
 
 
 def route_after_dedup(state: QuestionStateObject) -> str:
-    """After deduplication check — REJECT goes back to Agent A, else proceed to Agent C."""
+    """After deduplication check — REJECT goes back to Agent A, else proceed to Agent D."""
     verdict = state.get("deduplication", {}).get("verdict", "PASS")
     if verdict == "REJECT":
         return "agent_a"          # Request a new blueprint/scenario
-    return "agent_c"              # PASS or FLAG both proceed (FLAG = note in state)
+    return "agent_d"              # PASS or FLAG both proceed (FLAG = note in state)
 
 
 def route_after_agent_d(state: QuestionStateObject) -> str:
@@ -42,6 +42,11 @@ def route_after_agent_g(state: QuestionStateObject) -> str:
     if fqa.get("approved", False):
         return "__end__"          # → status = AWAITING_REVIEW
 
+    # Check retry budget
+    retries = state.get("retry_counts", {}).get("agent_c_external", 0)
+    if retries >= MAX_EXTERNAL_RETRIES:
+        return "human_escalation"
+
     checks = fqa.get("deterministic_checks", {})
 
     # Deterministic failures → targeted Agent C fix
@@ -61,8 +66,10 @@ def route_after_agent_g(state: QuestionStateObject) -> str:
 
 def route_after_agent_f(state: QuestionStateObject) -> str:
     """After Agent F (Revision Router) — route to A, C, or D based on feedback analysis."""
-    fa = state.get("feedback_analysis", {})
-    target = fa.get("re_entry_agent", "agent_c")
+    target = state.get("revision_route")
+    if not target:
+        fa = state.get("feedback_analysis", {})
+        target = fa.get("re_entry_agent", "agent_c")
 
     valid_targets = {"agent_a", "agent_c", "agent_d"}
     if target not in valid_targets:

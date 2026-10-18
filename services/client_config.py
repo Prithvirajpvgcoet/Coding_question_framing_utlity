@@ -4,6 +4,18 @@ Phase 1: hardcoded dev config — no DB required.
 Phase 5+: replace with real DB queries.
 """
 
+LANGUAGE_TIERS = {
+    "T1": ["python", "javascript", "java", "cpp", "csharp", "go"],
+    "T2": ["typescript", "ruby", "php", "swift", "kotlin", "r"],
+    "T3": ["sql", "html", "css", "react", "system_design"],
+}
+
+def get_language_tier(language: str) -> str:
+    for tier, langs in LANGUAGE_TIERS.items():
+        if language.lower() in langs:
+            return tier
+    return "T2"  # Unknown -> conservative default
+
 DEV_CLIENT_CONFIG = {
     "question_style":   "standard",
     "difficulty_bias":  0.0,

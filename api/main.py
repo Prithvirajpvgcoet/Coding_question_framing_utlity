@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routes import generate, status, questions, feedback, clients
+from api.routes import generate, status, questions, feedback, clients, dashboard, runs, banks, uploads, datasets
 from api.middleware.auth import AuthMiddleware
 from api.middleware.error_handler import register_exception_handlers
 
@@ -14,7 +14,10 @@ app = FastAPI(
 
 # ── CORS ─────────────────────────────────────────────────────────────────────
 app.add_middleware(CORSMiddleware,
-    allow_origins=["http://localhost:5173"],   # Vite dev server
+    allow_origins=[
+        "http://localhost:3000",   # Next.js dev server
+        "http://localhost:5173",   # Vite dev server (legacy)
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -32,6 +35,11 @@ app.include_router(status.router,    prefix="/api/v1")
 app.include_router(questions.router, prefix="/api/v1")
 app.include_router(feedback.router,  prefix="/api/v1")
 app.include_router(clients.router,   prefix="/api/v1")
+app.include_router(dashboard.router, prefix="/api/v1")
+app.include_router(runs.router,      prefix="/api/v1")
+app.include_router(banks.router,     prefix="/api/v1")
+app.include_router(uploads.router,   prefix="/api/v1")
+app.include_router(datasets.router,  prefix="/api/v1")
 
 
 @app.get("/health")

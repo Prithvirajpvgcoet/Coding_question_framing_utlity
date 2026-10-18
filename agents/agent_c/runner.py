@@ -19,9 +19,10 @@ async def run(state: QuestionStateObject) -> dict:
     language = state.get("requirements", {}).get("target_language", "python")
     template = state.get("client_config", {}).get("code_template", "")
 
+    references = state.get("references", [])
     # Step 1 & 2: Content generation (Only happens once)
-    print("[Agent C] 1. Generating question...")
-    question = await gen_question(blueprint)
+    print(f"[Agent C] 1. Generating question (using {len(references)} domain references)...")
+    question = await gen_question(blueprint, references=references)
     
     print("[Agent C] 2. Formatting HTML...")
     question["description_html"] = await format_html(question.get("description_markdown", ""))
