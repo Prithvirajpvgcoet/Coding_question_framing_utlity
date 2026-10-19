@@ -33,7 +33,7 @@ async def escalate_to_human(state: QuestionStateObject) -> dict:
 
 
 # ── Graph builder ─────────────────────────────────────────────────────────────
-def build_graph() -> StateGraph:
+def build_graph(entry_point: str = "agent_a") -> StateGraph:
     g = StateGraph(QuestionStateObject)
 
     # ── Register all nodes ────────────────────────────────────────────────────
@@ -48,7 +48,7 @@ def build_graph() -> StateGraph:
     g.add_node("human_escalation", escalate_to_human)
 
     # ── Entry point ───────────────────────────────────────────────────────────
-    g.set_entry_point("agent_a")
+    g.set_entry_point(entry_point)
 
     # ── Main generation flow (linear happy path) ──────────────────────────────
     g.add_edge("agent_a", "agent_b")
@@ -94,5 +94,6 @@ def build_graph() -> StateGraph:
 
 
 # Singleton — imported by workers/tasks.py
-workflow = build_graph()
+workflow = build_graph(entry_point="agent_a")
+feedback_workflow = build_graph(entry_point="agent_e")
 

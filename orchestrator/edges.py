@@ -58,7 +58,8 @@ def route_after_agent_g(state: QuestionStateObject) -> str:
         return "agent_c"
 
     # Score too low → back to blueprint
-    if fqa.get("aggregate_score", 0) < float(os.getenv("QUALITY_PASS_THRESHOLD", 70)):
+    threshold = float(os.getenv("FINAL_QA_PERCENT_THRESHOLD", os.getenv("QUALITY_PASS_THRESHOLD", 70)))
+    if fqa.get("aggregate_score", 0) < threshold:
         return "agent_a"
 
     return "human_escalation"

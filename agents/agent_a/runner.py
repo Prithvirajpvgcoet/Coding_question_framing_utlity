@@ -57,19 +57,18 @@ async def run(state: QuestionStateObject) -> dict:
     print(f"[Agent A] Blueprint: {blueprint.get('scenario', '')[:80]}...")
 
     # Log agent runs
-    import asyncio
     from observability.agent_logger import log_agent_run
     request_id = state.get("request_id", "")
     if usage_intake:
-        asyncio.ensure_future(log_agent_run(
+        await log_agent_run(
             question_id=q_id, request_id=request_id,
             agent_name="agent_a.intake", usage=usage_intake,
             internal_step=True,
-        ))
-    asyncio.ensure_future(log_agent_run(
+        )
+    await log_agent_run(
         question_id=q_id, request_id=request_id,
         agent_name="agent_a.blueprint", usage=usage_bp,
-    ))
+    )
 
     return {
         "current_agent": "agent_a",

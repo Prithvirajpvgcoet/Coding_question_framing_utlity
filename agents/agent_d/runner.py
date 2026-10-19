@@ -11,7 +11,7 @@ from agents.base import groq_chat, load_prompt, MODEL_STRONG, utcnow
 from orchestrator.state import QuestionStateObject
 
 SYSTEM = load_prompt("agent_d_scorer")
-QUALITY_THRESHOLD = float(os.getenv("QUALITY_PASS_THRESHOLD", "4.0"))
+QUALITY_THRESHOLD = float(os.getenv("QUALITY_SCORE_THRESHOLD", os.getenv("QUALITY_PASS_THRESHOLD", "4.0")))
 
 
 async def run(state: QuestionStateObject) -> dict:
@@ -50,13 +50,14 @@ async def run(state: QuestionStateObject) -> dict:
         print(f"[Agent D] Kicking back to Agent C! Reason: {feedback}")
 
     # Log agent run
-    asyncio.ensure_future(__import__("observability.agent_logger", fromlist=["log_agent_run"]).log_agent_run(
+    from observability.agent_logger import log_agent_run
+    await log_agent_run(
         question_id=q_id,
         request_id=state.get("request_id", ""),
         agent_name="agent_d",
         usage=usage,
         status="SUCCESS",
-    ))
+    )
 
     return {
         "current_agent":  "agent_d",

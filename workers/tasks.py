@@ -41,7 +41,7 @@ async def _feedback_revision(question_id: str, feedback_text: str) -> None:
     from agents.agent_e import run as run_e
     from agents.agent_f import run as run_f
     from orchestrator.edges import route_after_agent_f
-    from orchestrator.graph import workflow
+    from orchestrator.graph import build_graph, workflow
 
     # Load current state from DB
     async with get_session() as db:
@@ -75,8 +75,9 @@ async def _feedback_revision(question_id: str, feedback_text: str) -> None:
     target = route_after_agent_f(state)
     print(f"[Celery] Feedback revision re-entering at: {target}")
 
-    # Run the rest of the workflow from the re-entry point
-    final_state = await workflow.ainvoke(state)
+    # Build and run the workflow from the targeted re-entry point
+    revision_graph = build_graph(entry_point=target)
+    final_state = await revision_graph.ainvoke(state)
 
     async with get_session() as db:
         await db.execute(

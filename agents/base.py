@@ -18,12 +18,17 @@ MODEL_CODE   = os.getenv("MODEL_CODE",   "qwen/qwen3.8-27b")
 MODEL_CHEAP  = os.getenv("MODEL_CHEAP",  "openai/gpt-oss-20b")
 
 
+from pathlib import Path
+
+PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
+
+
 def utcnow() -> str:
     return datetime.datetime.now(datetime.UTC).isoformat()
 
 
 def load_prompt(filename: str) -> str:
-    path = os.path.join("prompts", f"{filename}.txt")
+    path = PROMPTS_DIR / f"{filename}.txt"
     try:
         with open(path, encoding="utf-8") as f:
             return f.read()
