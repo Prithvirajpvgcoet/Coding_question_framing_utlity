@@ -1,0 +1,11 @@
+[
+  {
+    "title": "Pair Sum in a Sorted Ledger",
+    "topic": "Arrays",
+    "subtopic": "Two Pointers",
+    "difficulty": "MEDIUM",
+    "domain": "FinTech & Banking",
+    "scenario": "Find two sorted transaction amounts whose sum matches a target.",
+    "tags": ["arrays", "two-pointers", "payments"]
+  }
+]

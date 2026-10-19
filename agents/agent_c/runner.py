@@ -35,6 +35,7 @@ async def run(state: QuestionStateObject) -> dict:
     max_retries = 3
     passed = False
     feedback = ""
+    sandbox_res = {}
     
     for attempt in range(1, max_retries + 1):
         print(f"\n[Agent C] Attempt {attempt}/{max_retries}...")
@@ -66,6 +67,19 @@ async def run(state: QuestionStateObject) -> dict:
     return {
         "current_agent": "agent_c",
         "updated_at": utcnow(),
+        "question": question,
+        "html": {
+            "formatted_question": question.get("description_html", ""),
+            "html_valid": True,
+            "validation_errors": [],
+        },
+        "code": {"solution": formatted_code, "language": language},
+        "execution": {
+            "all_passed": passed,
+            "unverified": sandbox_res.get("unverified", language.lower() != "python"),
+            "output": sandbox_res.get("output", ""),
+        },
+        "test_cases": test_cases,
         "generated_question": question,
         "solution_architecture": solution_arch,
         "solution_code": formatted_code,

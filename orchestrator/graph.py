@@ -52,17 +52,17 @@ def build_graph() -> StateGraph:
 
     # ── Main generation flow (linear happy path) ──────────────────────────────
     g.add_edge("agent_a", "agent_b")
-    g.add_edge("agent_b", "dedup_check")
+    g.add_edge("agent_b", "agent_c")
+    g.add_edge("agent_c", "dedup_check")
 
     # ── Dedup branch ──────────────────────────────────────────────────────────
     g.add_conditional_edges("dedup_check", edges.route_after_dedup, {
         "agent_a": "agent_a",         # REJECT → rethink blueprint
-        "agent_c": "agent_c",         # PASS/FLAG → continue
+        "agent_c": "agent_c",         # REJECT compatibility route
+        "agent_d": "agent_d",         # Legacy route compatibility
     })
 
     # ── Agent C → D ───────────────────────────────────────────────────────────
-    g.add_edge("agent_c", "agent_d")
-
     # ── Agent D branch ────────────────────────────────────────────────────────
     g.add_conditional_edges("agent_d", edges.route_after_agent_d, {
         "agent_g":          "agent_g",

@@ -1,0 +1,22 @@
+{
+  "request_id": "offline-request-001",
+  "question_id": "offline-question-001",
+  "client_id": "00000000-0000-0000-0000-000000000001",
+  "version": 1,
+  "status": "PROCESSING",
+  "current_agent": "",
+  "retry_counts": {},
+  "internal_retry_count": 0,
+  "revision_count": 0,
+  "error_log": [],
+  "requirements": {
+    "topic": "Arrays",
+    "subtopic": "Two Pointers",
+    "difficulty": "MEDIUM",
+    "question_type": "ALGORITHMIC",
+    "target_language": "python",
+    "max_solve_time_minutes": 30,
+    "raw_request": "Generate a medium Python two-pointer assessment question."
+  },
+  "agent_run_ids": []
+}

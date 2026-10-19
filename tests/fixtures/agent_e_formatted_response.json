@@ -1,0 +1,5 @@
+{
+  "severity": "LOW",
+  "category": "FORMATTING",
+  "summary": "Correct the typo in the question description without changing the algorithm."
+}
