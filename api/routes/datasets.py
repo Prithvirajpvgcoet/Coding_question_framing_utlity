@@ -102,11 +102,14 @@ async def upload_dataset_file(
     file: UploadFile = File(...),
     doc_type: str = Form("DOMAIN_SCENARIO"),
     tags: str = Form(""),
+    custom_topic: Optional[str] = Form(None),
+    custom_domain: Optional[str] = Form(None),
     client_id: str = Depends(get_client_id),
     db: AsyncSession = Depends(get_db),
 ):
     """
     Upload and ingest a reference dataset file (.pdf, .docx, .json, .csv, .md, .txt).
+    Supports optional custom_topic and custom_domain overrides.
     """
     content_bytes = await file.read()
     extra_tags = [t.strip().lower() for t in tags.split(",") if t.strip()]
@@ -119,6 +122,8 @@ async def upload_dataset_file(
             content_bytes=content_bytes,
             doc_type=doc_type,
             extra_tags=extra_tags,
+            custom_topic=custom_topic,
+            custom_domain=custom_domain,
         )
         return {
             "status": "INGESTED",

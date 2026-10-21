@@ -30,6 +30,9 @@ export default function DatasetsPage() {
 
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadDocType, setUploadDocType] = useState<string>("DOMAIN_SCENARIO");
+  const [uploadDomain, setUploadDomain] = useState<string>("AUTO");
+  const [customDomainText, setCustomDomainText] = useState<string>("");
+  const [customTopicText, setCustomTopicText] = useState<string>("");
   const [uploadTags, setUploadTags] = useState<string>("");
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -61,9 +64,25 @@ export default function DatasetsPage() {
     setIsUploading(true);
     setUploadError(null);
     try {
-      await api.uploadDatasetFile(uploadFile, uploadDocType, uploadTags);
+      const finalDomain =
+        uploadDomain === "OTHER"
+          ? customDomainText.trim()
+          : uploadDomain === "AUTO"
+          ? undefined
+          : uploadDomain;
+
+      await api.uploadDatasetFile(
+        uploadFile,
+        uploadDocType,
+        uploadTags,
+        customTopicText.trim() || undefined,
+        finalDomain || undefined
+      );
       setUploadFile(null);
       setUploadTags("");
+      setCustomTopicText("");
+      setCustomDomainText("");
+      setUploadDomain("AUTO");
       mutate();
     } catch (err: any) {
       setUploadError(err.message || "Upload failed");
@@ -332,6 +351,57 @@ export default function DatasetsPage() {
                       <option value="REFERENCE_QUESTION">Reference Problem (Legacy / Gold standard)</option>
                       <option value="RUBRIC">Evaluation Rubric & Grading Standard</option>
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Target Domain
+                    </label>
+                    <select
+                      value={uploadDomain}
+                      onChange={(e) => setUploadDomain(e.target.value)}
+                      className="w-full text-xs border border-slate-200 rounded p-2 bg-white text-slate-700"
+                    >
+                      <option value="AUTO">🤖 Auto-Detect (Infers from document text)</option>
+                      <option value="Core Algorithms & Distributed Systems">⚡ Core Algorithms & Distributed Systems</option>
+                      <option value="FinTech & Banking">💳 FinTech & Banking</option>
+                      <option value="E-Commerce & Logistics">📦 E-Commerce & Logistics</option>
+                      <option value="Embedded & Automotive">🚗 Embedded & Automotive</option>
+                      <option value="Healthcare & MedTech">🏥 Healthcare & MedTech</option>
+                      <option value="OTHER">✏️ Other / Custom Domain (Specify below)</option>
+                    </select>
+                  </div>
+
+                  {uploadDomain === "OTHER" && (
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Custom Domain Name *
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Cybersecurity, Telecommunications, Robotics"
+                        value={customDomainText}
+                        onChange={(e) => setCustomDomainText(e.target.value)}
+                        className="w-full text-xs border border-blue-300 rounded p-2 text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 bg-blue-50/20"
+                        required
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Author Topic (Optional Override)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Arrays, Graph Traversals, Sliding Window (Leave blank to auto-detect)"
+                      value={customTopicText}
+                      onChange={(e) => setCustomTopicText(e.target.value)}
+                      className="w-full text-xs border border-slate-200 rounded p-2 text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      Overrides generic categorization with your exact topic for Agent B retrieval.
+                    </p>
                   </div>
 
                   <div>

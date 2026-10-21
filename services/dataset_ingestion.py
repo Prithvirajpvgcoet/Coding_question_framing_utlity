@@ -115,11 +115,17 @@ def classify_domain_and_topic(text: str) -> tuple[str, str, List[str]]:
             "Medical Data Streams & Protocol Parsing",
             ["healthcare", "medtech", "hl7"],
         )
+    elif any(k in lower for k in ("game", "physics", "rendering", "graphics", "shader", "collision", "vulkan", "opengl")):
+        return (
+            "Gaming & Graphics",
+            "Game Mechanics & Physics Math",
+            ["gaming", "graphics", "physics"],
+        )
     else:
         return (
-            "Enterprise Systems",
-            "Software Architecture & Algorithms",
-            ["enterprise", "system-design"],
+            "General Algorithms",
+            "Data Structures & Problem Solving",
+            ["algorithms", "general"],
         )
 
 
@@ -288,6 +294,8 @@ async def ingest_file_content(
     content_bytes: bytes,
     doc_type: str = "DOMAIN_SCENARIO",
     extra_tags: Optional[List[str]] = None,
+    custom_topic: Optional[str] = None,
+    custom_domain: Optional[str] = None,
 ) -> List[dict]:
     """
     Ingest a file (PDF, Word, JSON, CSV, MD, or TXT) and persist reference documents
@@ -325,16 +333,20 @@ async def ingest_file_content(
         # Deduplicate tags
         tags = list(dict.fromkeys(tags))
 
+        # Respect user-supplied custom topic or domain overrides if provided
+        final_topic = custom_topic.strip() if custom_topic and custom_topic.strip() else item.get("topic", "General")
+        final_domain = custom_domain.strip() if custom_domain and custom_domain.strip() else item.get("domain", "General Algorithms")
+
         doc = ReferenceDocument(
             id=uuid.uuid4(),
             client_id=c_uuid,
             title=item.get("title", "Reference Scenario"),
             doc_type=doc_type,
             format=file_format,
-            topic=item.get("topic", "General"),
+            topic=final_topic,
             subtopic=item.get("subtopic", ""),
             difficulty=item.get("difficulty", "MEDIUM"),
-            domain=item.get("domain", ""),
+            domain=final_domain,
             tags=tags,
             raw_content=item.get("scenario", "") or json.dumps(item),
             structured_data=item,

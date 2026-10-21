@@ -293,12 +293,24 @@ export const api = {
     return handleResponse<{ status: string; count: number; seeded: any[] }>(res);
   },
 
-  uploadDatasetFile: async (file: File, docType: string = "DOMAIN_SCENARIO", tags?: string) => {
+  uploadDatasetFile: async (
+    file: File,
+    docType: string = "DOMAIN_SCENARIO",
+    tags?: string,
+    customTopic?: string,
+    customDomain?: string
+  ) => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("doc_type", docType);
     if (tags) {
       formData.append("tags", tags);
+    }
+    if (customTopic) {
+      formData.append("custom_topic", customTopic);
+    }
+    if (customDomain) {
+      formData.append("custom_domain", customDomain);
     }
     const res = await fetch(`${BASE_URL}/datasets/upload`, {
       method: "POST",
