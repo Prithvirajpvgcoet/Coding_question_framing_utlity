@@ -57,23 +57,23 @@ async def list_datasets(
         try:
             res = await db.execute(stmt)
             docs = res.scalars().all()
-            if docs:
-                return [
-                    {
-                        "id": str(d.id),
-                        "title": d.title,
-                        "doc_type": d.doc_type,
-                        "format": d.format,
-                        "topic": d.topic,
-                        "subtopic": d.subtopic,
-                        "difficulty": d.difficulty,
-                        "domain": d.domain,
-                        "tags": d.tags,
-                        "snippet": (d.raw_content[:200] + "...") if len(d.raw_content or "") > 200 else (d.raw_content or ""),
-                        "created_at": d.created_at.isoformat() if d.created_at else None,
-                    }
-                    for d in docs
-                ]
+            # If the database is connected, return the user's stored documents (even if empty)
+            return [
+                {
+                    "id": str(d.id),
+                    "title": d.title,
+                    "doc_type": d.doc_type,
+                    "format": d.format,
+                    "topic": d.topic,
+                    "subtopic": d.subtopic,
+                    "difficulty": d.difficulty,
+                    "domain": d.domain,
+                    "tags": d.tags,
+                    "snippet": (d.raw_content[:200] + "...") if len(d.raw_content or "") > 200 else (d.raw_content or ""),
+                    "created_at": d.created_at.isoformat() if d.created_at else None,
+                }
+                for d in docs
+            ]
         except Exception as e:
             print(f"[Datasets API] DB query failed ({e}), falling back to local seed datasets")
 
@@ -227,6 +227,10 @@ async def delete_dataset(
     client_id: str = Depends(get_client_id),
     db: AsyncSession = Depends(get_db),
 ):
+    # Handle offline seed datasets or non-persisted datasets gracefully
+    if dataset_id.startswith("seed-offline-") or db is None:
+        return {"status": "DELETED", "id": dataset_id, "note": "Removed from session view"}
+
     try:
         d_uuid = uuid.UUID(dataset_id)
     except ValueError:

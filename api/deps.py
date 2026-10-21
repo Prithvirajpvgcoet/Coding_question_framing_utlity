@@ -10,13 +10,21 @@ async def get_client_id(request: Request) -> str:
 async def get_db(request: Request):
     from db.session import get_session, set_rls_client
     client_id = await get_client_id(request)
+    session = None
     try:
-        async with get_session() as session:
+        async with get_session() as s:
+            session = s
             try:
                 await set_rls_client(session, client_id)
-            except Exception as e:
+            except Exception:
                 pass
             yield session
+    except HTTPException:
+        # Route handler raised an HTTPException (e.g. 400/404); re-raise cleanly without corrupting the generator
+        raise
     except Exception as db_err:
-        # Postgres daemon not running or network connection refused
-        yield None
+        # If the session failed to connect or query
+        if session is None:
+            yield None
+        else:
+            raise

@@ -28,6 +28,6 @@ def get_session_sync():
 async def set_rls_client(session: AsyncSession, client_id: str):
     """Set the RLS context variable for multi-tenant isolation."""
     await session.execute(
-        text("SET LOCAL app.current_client_id = :cid"),
-        {"cid": client_id}
+        text("SELECT set_config('app.current_client_id', :cid, true)"),
+        {"cid": str(client_id)}
     )
