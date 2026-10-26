@@ -1,0 +1,45 @@
+[
+  {
+    "title": "Department Salary Dense Rank",
+    "category": "SQL",
+    "topic": "Window Functions",
+    "subtopic": "Partitioned Dense Ranking",
+    "difficulty": "MEDIUM",
+    "domain": "Database & Business Analytics",
+    "doc_type": "AUTHORING_SPEC",
+    "format_schema": "DATABASE_QUERY",
+    "evaluation_mode": "RESULT_SET_MATCH",
+    "retrieval_summary": "SQL query assessing DENSE_RANK() window function partitioned by department_id to rank employee salaries without gaps in ranking.",
+    "tags": ["sql", "window-functions", "dense-rank", "partition-by", "authoring-spec", "platform-format"],
+    "scenario": "A corporation's human resources division requires an automated payroll audit query. For every employee, compute their salary rank within their department such that identical salaries receive the same rank without skipping subsequent rank numbers.",
+    "schema_definition": "CREATE TABLE employees (\n    emp_id INT PRIMARY KEY,\n    name VARCHAR(50) NOT NULL,\n    dept_id INT NOT NULL,\n    salary DECIMAL(10,2) NOT NULL\n);\n\nCREATE TABLE departments (\n    dept_id INT PRIMARY KEY,\n    dept_name VARCHAR(50) NOT NULL\n);",
+    "sample_data": "INSERT INTO departments VALUES (10, 'Engineering'), (20, 'Finance');\nINSERT INTO employees VALUES (1, 'Alice', 10, 95000.00), (2, 'Bob', 10, 95000.00), (3, 'Charlie', 10, 80000.00), (4, 'David', 20, 75000.00);",
+    "query_instructions": "Write an SQL query to retrieve employee name, department name, salary, and salary_rank. Sort the final result by dept_name ASC, salary_rank ASC, name ASC.",
+    "expected_output_columns": ["name", "dept_name", "salary", "salary_rank"],
+    "sample_output_table": "| name | dept_name | salary | salary_rank |\n|:---|:---|:---|:---|\n| Alice | Engineering | 95000.00 | 1 |\n| Bob | Engineering | 95000.00 | 1 |\n| Charlie | Engineering | 80000.00 | 2 |\n| David | Finance | 75000.00 | 1 |",
+    "explanation": "Alice and Bob in Engineering both earn 95000.00 and share rank 1. Charlie earns 80000.00 and receives rank 2 because DENSE_RANK does not skip numbers. David is the sole employee in Finance and receives rank 1.",
+    "starter_code_snippets": {
+      "sql": "/* Write your SQL query below */\nSELECT \n    \nFROM employees e\nJOIN departments d ON e.dept_id = d.dept_id;\n"
+    },
+    "solution_code": {
+      "sql": "SELECT e.name, d.dept_name, e.salary, DENSE_RANK() OVER(PARTITION BY e.dept_id ORDER BY e.salary DESC) AS salary_rank FROM employees e JOIN departments d ON e.dept_id = d.dept_id ORDER BY d.dept_name ASC, salary_rank ASC, e.name ASC;"
+    },
+    "test_cases": [
+      {
+        "test_case_num": 1,
+        "type": "VISIBLE",
+        "description": "Standard multi-department dataset with salary ties",
+        "expected_output": "Alice|Engineering|95000.00|1\nBob|Engineering|95000.00|1\nCharlie|Engineering|80000.00|2\nDavid|Finance|75000.00|1",
+        "points": 5
+      },
+      {
+        "test_case_num": 2,
+        "type": "HIDDEN",
+        "description": "Department with single employee and three-way tie",
+        "input_dml": "INSERT INTO employees VALUES (5, 'Emma', 10, 95000.00);",
+        "expected_output": "Alice|Engineering|95000.00|1\nBob|Engineering|95000.00|1\nEmma|Engineering|95000.00|1\nCharlie|Engineering|80000.00|2\nDavid|Finance|75000.00|1",
+        "points": 5
+      }
+    ]
+  }
+]

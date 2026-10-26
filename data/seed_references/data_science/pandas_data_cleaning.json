@@ -1,0 +1,41 @@
+[
+  {
+    "title": "Telecom Churn Feature Imputation & Outlier Trimming",
+    "category": "DATA_SCIENCE",
+    "topic": "Data Preprocessing",
+    "subtopic": "Pandas Missing Value Imputation & IQR Trimming",
+    "difficulty": "MEDIUM",
+    "domain": "Data Science & Machine Learning",
+    "doc_type": "AUTHORING_SPEC",
+    "format_schema": "DATASET_CODING",
+    "evaluation_mode": "PYTHON_RUNNER",
+    "retrieval_summary": "Data science preprocessing task using pandas and numpy to impute null numerical values with column medians and trim outliers beyond 1.5 * IQR.",
+    "tags": ["data-science", "pandas", "numpy", "imputation", "outliers", "authoring-spec", "platform-format"],
+    "scenario": "A telecommunications analytics team prepares raw subscriber records for churn predictive modeling. Missing values in tenure and monthly_charges must be imputed using their respective column medians, and monthly_charges values exceeding 1.5 times the IQR above the 75th percentile must be capped.",
+    "dataset_description": "Input DataFrame containing subscriber columns: ['customer_id', 'tenure_months', 'monthly_charges', 'churn']. Null values appear intermittently in numeric columns.",
+    "function_name": "clean_churn_features",
+    "function_description": "In the provided code snippet, implement clean_churn_features(df: pd.DataFrame) -> pd.DataFrame to impute null values with median and cap upper outliers. Write your code below the phrase 'WRITE YOUR LOGIC HERE'.",
+    "input_format": "CSV data stream parsed from sys.stdin with header line.",
+    "sample_input": "customer_id,tenure_months,monthly_charges,churn\n1,12,70.5,0\n2,,85.0,1\n3,24,,0\n4,48,200.0,0",
+    "output_format": "Processed DataFrame CSV string printed to sys.stdout with rounded 2 decimal places.",
+    "sample_output": "customer_id,tenure_months,monthly_charges,churn\n1,12.0,70.5,0\n2,24.0,85.0,1\n3,24.0,85.0,0\n4,48.0,106.75,0",
+    "tolerance": 0.0001,
+    "explanation": "Missing tenure_months is imputed using median=24.0. Missing monthly_charges is imputed using median=85.0. Outlier monthly_charges 200.0 is capped to upper threshold 106.75 based on 1.5 * IQR.",
+    "starter_code_snippets": {
+      "python": "import sys\nimport pandas as pd\nimport numpy as np\nimport io\n\ndef clean_churn_features(df: pd.DataFrame) -> pd.DataFrame:\n    # this is default OUTPUT. You can change it.\n    result_df = df.copy()\n\n    # write your Logic here:\n\n\n    return result_df\n\ndef main():\n    raw_input = sys.stdin.read().strip()\n    if not raw_input:\n        return\n    df = pd.read_csv(io.StringIO(raw_input))\n    processed = clean_churn_features(df)\n    print(processed.to_csv(index=False))\n\nif __name__ == '__main__':\n    main()"
+    },
+    "solution_code": {
+      "python": "import sys\nimport pandas as pd\nimport numpy as np\nimport io\n\ndef clean_churn_features(df: pd.DataFrame) -> pd.DataFrame:\n    res = df.copy()\n    res['tenure_months'] = res['tenure_months'].fillna(res['tenure_months'].median())\n    res['monthly_charges'] = res['monthly_charges'].fillna(res['monthly_charges'].median())\n    q25 = res['monthly_charges'].quantile(0.25)\n    q75 = res['monthly_charges'].quantile(0.75)\n    iqr = q75 - q25\n    upper_limit = q75 + 1.5 * iqr\n    res['monthly_charges'] = np.where(res['monthly_charges'] > upper_limit, upper_limit, res['monthly_charges'])\n    return res\n\ndef main():\n    raw = sys.stdin.read().strip()\n    if not raw:\n        return\n    df = pd.read_csv(io.StringIO(raw))\n    out = clean_churn_features(df)\n    print(out.to_csv(index=False))\n\nif __name__ == '__main__':\n    main()"
+    },
+    "test_cases": [
+      {
+        "test_case_num": 1,
+        "type": "VISIBLE",
+        "description": "Standard 4-row customer sample with nulls and outlier",
+        "input": "customer_id,tenure_months,monthly_charges,churn\n1,12,70.5,0\n2,,85.0,1\n3,24,,0\n4,48,200.0,0",
+        "expected_output": "customer_id,tenure_months,monthly_charges,churn\n1,12.0,70.5,0\n2,24.0,85.0,1\n3,24.0,85.0,0\n4,48.0,106.75,0",
+        "points": 5
+      }
+    ]
+  }
+]

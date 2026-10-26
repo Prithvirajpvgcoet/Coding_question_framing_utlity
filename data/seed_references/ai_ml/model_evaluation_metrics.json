@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Classification Metrics: Macro vs Weighted F1-Score Selection",
+    "category": "AI_ML",
+    "topic": "Machine Learning Model Evaluation",
+    "subtopic": "Imbalanced Classification Metrics",
+    "difficulty": "MEDIUM",
+    "domain": "Artificial Intelligence & Data Science",
+    "doc_type": "AUTHORING_SPEC",
+    "format_schema": "OBJECTIVE_MCQ",
+    "evaluation_mode": "ANSWER_KEY",
+    "retrieval_summary": "AI/ML evaluation question assessing understanding of macro vs weighted F1-score when evaluating classification models on heavily imbalanced datasets.",
+    "tags": ["ai_ml", "machine-learning", "metrics", "f1-score", "authoring-spec", "platform-format"],
+    "scenario": "A machine learning engineer develops a fraud detection model on a transaction dataset where 99.2% of transactions are legitimate and 0.8% are fraudulent. The engineer must choose an appropriate evaluation metric to present to the risk management committee that reflects performance across both classes equally without being distorted by the majority class size.",
+    "question_prompt": "Which evaluation metric should the machine learning engineer prioritize to give equal importance to the fraud and non-fraud classes, regardless of their class frequencies in the dataset?",
+    "options": [
+      "A. Accuracy score across the test split",
+      "B. Macro-averaged F1-Score",
+      "C. Weighted-averaged F1-Score",
+      "D. Micro-averaged Precision score"
+    ],
+    "correct_answer": "B",
+    "explanation": "Macro-averaged F1-Score calculates the unweighted mean of F1-scores across all classes, treating minority (fraud) and majority (non-fraud) classes with equal importance. Weighted F1-Score weights each class by its support, allowing the 99.2% majority class to dominate the score.",
+    "taxonomy_tag": "ML_MODEL_EVALUATION"
+  }
+]

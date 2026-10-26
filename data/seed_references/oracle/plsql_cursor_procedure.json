@@ -1,0 +1,37 @@
+[
+  {
+    "title": "Oracle PL/SQL Department Bonus Audit",
+    "category": "ORACLE",
+    "topic": "PL/SQL Procedures",
+    "subtopic": "Explicit Cursors & Exception Handling",
+    "difficulty": "HARD",
+    "domain": "Oracle Enterprise Database",
+    "doc_type": "AUTHORING_SPEC",
+    "format_schema": "DATABASE_QUERY",
+    "evaluation_mode": "RESULT_SET_MATCH",
+    "retrieval_summary": "Oracle PL/SQL procedure utilizing explicit cursor and NVL/ROUND functions to compute aggregate department bonus with NO_DATA_FOUND exception handler.",
+    "tags": ["oracle", "plsql", "cursor", "procedures", "authoring-spec", "platform-format"],
+    "scenario": "An enterprise financial audit on Oracle Database 19c requires a stored procedure to compute the total bonus pool allocated to a specific department. If the department has no active staff, handle the exception gracefully and return 0.",
+    "schema_definition": "CREATE TABLE hr_employees (\n    employee_id NUMBER(6) PRIMARY KEY,\n    first_name VARCHAR2(20),\n    salary NUMBER(8,2),\n    department_id NUMBER(4)\n);\n\nCREATE TABLE hr_departments (\n    department_id NUMBER(4) PRIMARY KEY,\n    department_name VARCHAR2(30)\n);",
+    "sample_data": "INSERT INTO hr_departments VALUES (50, 'Shipping');\nINSERT INTO hr_employees VALUES (101, 'Neena', 17000.00, 50);\nINSERT INTO hr_employees VALUES (102, 'Lex', 17000.00, 50);",
+    "query_instructions": "Implement the PL/SQL procedure calculate_dept_bonus that calculates 10% bonus across the department staff and returns the total bonus in an OUT parameter p_total_bonus.",
+    "expected_output_columns": ["department_id", "total_bonus"],
+    "sample_output_table": "| department_id | total_bonus |\n|:---|:---|\n| 50 | 3400.00 |",
+    "explanation": "Total salary for department 50 is 17000 + 17000 = 34000. At 10%, the computed total bonus is 3400.00.",
+    "starter_code_snippets": {
+      "oracle": "CREATE OR REPLACE PROCEDURE calculate_dept_bonus (\n    p_dept_id IN NUMBER,\n    p_total_bonus OUT NUMBER\n) IS\n    -- WRITE YOUR LOGIC HERE\nBEGIN\n    p_total_bonus := -404;\nEND;\n"
+    },
+    "solution_code": {
+      "oracle": "CREATE OR REPLACE PROCEDURE calculate_dept_bonus (\n    p_dept_id IN NUMBER,\n    p_total_bonus OUT NUMBER\n) IS\n    v_sum NUMBER(10,2) := 0;\nBEGIN\n    SELECT NVL(SUM(salary * 0.10), 0) INTO v_sum FROM hr_employees WHERE department_id = p_dept_id;\n    p_total_bonus := v_sum;\nEXCEPTION\n    WHEN NO_DATA_FOUND THEN\n        p_total_bonus := 0;\n    WHEN OTHERS THEN\n        p_total_bonus := -1;\nEND;"
+    },
+    "test_cases": [
+      {
+        "test_case_num": 1,
+        "type": "VISIBLE",
+        "description": "Standard department bonus calculation",
+        "expected_output": "50|3400.00",
+        "points": 5
+      }
+    ]
+  }
+]
