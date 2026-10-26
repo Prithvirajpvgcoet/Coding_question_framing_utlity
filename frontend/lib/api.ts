@@ -290,7 +290,7 @@ export const api = {
       method: "POST",
       headers: defaultHeaders(),
     });
-    return handleResponse<{ status: string; count: number; seeded: any[] }>(res);
+    return handleResponse<{ status: string; count: number; message?: string; seeded?: any[] }>(res);
   },
 
   uploadDatasetFile: async (

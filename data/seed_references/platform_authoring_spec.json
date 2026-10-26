@@ -1,0 +1,53 @@
+[
+  {
+    "title": "Element Removal & Array Frequency Parity",
+    "topic": "Array Operations",
+    "subtopic": "Frequency Counting & Modulo Removals",
+    "difficulty": "EASY",
+    "domain": "Core Algorithms & Platform Standards",
+    "doc_type": "AUTHORING_SPEC",
+    "tags": ["array-operations", "authoring-spec", "standard-template", "platform-format"],
+    "scenario": "You are given an integer array A and an integer K. Remove the minimum number of elements such that the frequency of each element is divisible by K. Find the minimum number of elements removed.",
+    "standard_format_rules": {
+      "header_format": "<em><strong>{{question_title}}</strong></em><br />\n<br />\n{{scenario_description}}<br />\n<br />\n<em><strong>{{prompt_action_line}}</strong></em><br />\n<br />",
+      "function_description_template": "<!--[if--><strong><u>Function Description</u></strong><br />\nIn the provided code snippet, implement the provided <strong><code>{{function_name}}(...)</code></strong>method to find the {{goal}}.&nbsp;You can write your code in the space below the phrase <code><strong>&ldquo;</strong><strong>WRITE YOUR LOGIC HERE</strong><strong>&rdquo;</strong></code>.<br />\n<br />\nThere will be multiple test cases running, so the Input and Output should match exactly as provided.<br />\nThe base Output variable <code><strong>result</strong></code> is set to a default value <code><strong>-404</strong></code> which can be modified. Additionally, you can add or remove these output variables.<br />\n<br />",
+      "input_format_template": "<strong><u>Input Format</u></strong><br />\n{{input_lines_description}}<br />\n<!--[if--><br />",
+      "sample_box_style": "<div style=\"background:#eeeeee;border:1px solid #cccccc;padding:5px 10px;\">{{sample_content_with_denotes}}</div>",
+      "sample_annotations_guideline": "Each line of sample input has right-padded non-breaking spaces followed by &nbsp;&nbsp;<em>-- denotes <strong><var></strong></em>",
+      "output_format_template": "<strong><u>Output Format</u></strong><br />\n{{output_description}}<br />\n<br />",
+      "sample_output_template": "<strong><u>Sample Output</u></strong><br />\n<div style=\"background:#eeeeee;border:1px solid #cccccc;padding:5px 10px;\">{{sample_output_value}}</div>\n&nbsp;<br />",
+      "explanation_template": "<strong><u>Explanation</u></strong><br />\nGiven<br />\n<ul>\n{{given_bullet_points}}\n</ul>\n{{step_by_step_explanation}}<br />\n<br />\nHence, the output is <em><strong>{{sample_output_value}}</strong></em>.<!--!--><!--[endif]--><!--[if--><!--[endif]--><!--!--><!--[if-->"
+    },
+    "starter_code_templates": {
+      "c": "#include <stdio.h>\n\nint elementRemoval(int N, int K, int A[]){\n\n    //this is default OUTPUT. You can change it.\n    int result = -404;\n\n    //write your Logic here:\n\n\n\n    return result;\n}\n\nint main(){\n    //INPUT [uncomment & modify if required]\n    int N;\n    scanf(\"%d\", &N);\n\n    int K;\n    scanf(\"%d\", &K);\n\n    int A[N];\n    for(int i = 0; i < N; i++){\n        scanf(\"%d\", &A[i]);\n    }\n\n    //OUTPUT [uncomment & modify if required]\n    printf(\"%d\", elementRemoval(N, K, A));\n\n    return 0;\n}",
+      "cpp": "#include <iostream>\nusing namespace std;\n\nint elementRemoval(int N, int K, int A[]){\n\n    //this is default OUTPUT. You can change it.\n    int result = -404;\n\n    //write your Logic here:\n\n\n\n    return result;\n}\n\nint main(){\n    //INPUT [uncomment & modify if required]\n    int N;\n    cin >> N;\n\n    int K;\n    cin >> K;\n\n    int A[N];\n    for(int i = 0; i < N; i++){\n        cin >> A[i];\n    }\n\n    //OUTPUT [uncomment & modify if required]\n    cout << elementRemoval(N, K, A);\n\n    return 0;\n}",
+      "python": "import sys\n\ndef element_removal(N: int, K: int, A: list[int]) -> int:\n    # this is default OUTPUT. You can change it.\n    result = -404\n\n    # write your Logic here:\n\n    return result\n\ndef main():\n    lines = sys.stdin.read().split()\n    if not lines:\n        return\n    N = int(lines[0])\n    K = int(lines[1])\n    A = [int(x) for x in lines[2:2 + N]]\n    print(element_removal(N, K, A))\n\nif __name__ == \"__main__\":\n    main()"
+    },
+    "solution_code_samples": {
+      "cpp": "#include <iostream>\n#include <unordered_map>\nusing namespace std;\n\nint elementRemoval(int N, int K, int A[]){\n    int result = -404;\n    unordered_map<int, int> freq;\n    for(int i = 0; i < N; i++){\n        freq[A[i]]++;\n    }\n    result = 0;\n    for(auto &entry : freq){\n        int frequency = entry.second;\n        result += (frequency % K);\n    }\n    return result;\n}\n\nint main(){\n    int N, K;\n    if (!(cin >> N >> K)) return 0;\n    int A[N];\n    for(int i = 0; i < N; i++) cin >> A[i];\n    cout << elementRemoval(N, K, A);\n    return 0;\n}"
+    },
+    "test_cases_table": [
+      {
+        "test_case": 1,
+        "input": "5\n2\n1 1 1 2 2",
+        "expected_output": "1",
+        "points": 0,
+        "type": "SAMPLE"
+      },
+      {
+        "test_case": 2,
+        "input": "2\n1\n1 2",
+        "expected_output": "0",
+        "points": 2,
+        "type": "HIDDEN"
+      },
+      {
+        "test_case": 3,
+        "input": "3\n2\n1 1 1",
+        "expected_output": "1",
+        "points": 2,
+        "type": "HIDDEN"
+      }
+    ]
+  }
+]

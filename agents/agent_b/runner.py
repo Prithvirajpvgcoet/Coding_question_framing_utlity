@@ -3,6 +3,7 @@ Agent B — Reference Retrieval & Deduplication
 Hybrid retrieval over ingested knowledge datasets to provide Agent C with personalized context.
 """
 import datetime
+import os
 from orchestrator.state import QuestionStateObject
 from services.reference_retriever import retrieve_references
 from services.deduplication import ngram_overlap
@@ -14,20 +15,21 @@ async def run(state: QuestionStateObject) -> dict:
 
     requirements = state.get("requirements", {})
     client_id = state.get("client_id", "00000000-0000-0000-0000-000000000001")
+    retrieval_limit = int(os.environ.get("REFERENCE_RETRIEVAL_LIMIT", "3"))
 
     # Retrieve relevant domain scenarios and reference problems
-    references = await retrieve_references(requirements, client_id, limit=3)
+    references = await retrieve_references(requirements, client_id, limit=retrieval_limit)
 
     print(f"[Agent B] Retrieved {len(references)} reference scenarios for topic: {requirements.get('topic')}")
 
     return {
         "references":    references,
         "current_agent": "agent_b",
-        "updated_at":    datetime.datetime.now(datetime.UTC).isoformat(),
+        "updated_at":    datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
 
 
-async def run_dedup_check(state: QuestionStateObject) -> dict:
+async def run_dedup(state: QuestionStateObject) -> dict:
     """
     Deduplication check node — sits after Agent C.
     Checks generated question for high lexical / structural overlap against references.
@@ -49,11 +51,14 @@ async def run_dedup_check(state: QuestionStateObject) -> dict:
             max_overlap = overlap
             matched_id = ref.get("id") or ref.get("title")
 
-    # Hard rejection threshold 0.90, flag threshold 0.75
+    # Read configurable thresholds from environment variables
+    reject_threshold = float(os.environ.get("DEDUP_REJECT_THRESHOLD", "0.90"))
+    flag_threshold   = float(os.environ.get("DEDUP_FLAG_THRESHOLD", "0.75"))
+
     verdict = "PASS"
-    if max_overlap >= 0.90:
+    if max_overlap >= reject_threshold:
         verdict = "REJECT"
-    elif max_overlap >= 0.75:
+    elif max_overlap >= flag_threshold:
         verdict = "FLAG"
 
     return {
@@ -64,5 +69,9 @@ async def run_dedup_check(state: QuestionStateObject) -> dict:
             "verdict":               verdict,
         },
         "current_agent": "dedup_check",
-        "updated_at":    datetime.datetime.now(datetime.UTC).isoformat(),
+        "updated_at":    datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
+
+
+# Backwards compatibility alias
+run_dedup_check = run_dedup

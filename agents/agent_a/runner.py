@@ -1,22 +1,23 @@
 """
-Agent A - Intake & Blueprint
-Wires 4 internal sub-steps with real Groq LLM calls.
+Agent A — Intake & Syllabus Mapping
+Phase 1: real Groq API calls for intake and blueprint.
 """
 from agents.base import utcnow
-from agents.agent_a.intake     import extract_requirements
-from agents.agent_a.curriculum import map_topic
-from agents.agent_a.blueprint  import design_blueprint
-from services.client_config    import load_client_config
-from orchestrator.state        import QuestionStateObject
+from orchestrator.state import QuestionStateObject
+from services.client_config import load_client_config
 
+from .intake import extract_requirements
+from .curriculum import map_topic
+from .blueprint import design_blueprint
 
 async def run(state: QuestionStateObject) -> dict:
-    q_id      = state.get("question_id", "")
-    client_id = state.get("client_id",   "")
-    reqs_in   = state.get("requirements", {})
+    q_id = state.get("question_id", "unknown")
     print(f"[Agent A] Starting - q:{q_id}")
 
-    # Step 1: Extract / validate requirements
+    client_id = state.get("client_id", "00000000-0000-0000-0000-000000000001")
+    reqs_in   = state.get("requirements", {})
+
+    # Step 1: Extract requirements from raw request (if needed)
     raw_request = reqs_in.get("raw_request", "")
     if raw_request and not reqs_in.get("topic"):
         requirements = await extract_requirements(raw_request)
@@ -33,7 +34,8 @@ async def run(state: QuestionStateObject) -> dict:
         topic=requirements.get("topic", "Arrays"),
         subtopic=requirements.get("subtopic", ""),
     )
-    print(f"[Agent A] Curriculum: {curriculum['learning_objectives']}")
+    objectives = curriculum.get("learning_objectives", []) if isinstance(curriculum, dict) else []
+    print(f"[Agent A] Curriculum: {objectives}")
 
     # Step 3: Load client config
     client_config = await load_client_config(
@@ -54,27 +56,35 @@ async def run(state: QuestionStateObject) -> dict:
         revision_instruction=revision_instruction,
     )
     usage_bp = blueprint.pop("_blueprint_usage", {})
-    print(f"[Agent A] Blueprint: {blueprint.get('scenario', '')[:80]}...")
 
-    # Log agent runs
-    from observability.agent_logger import log_agent_run
-    request_id = state.get("request_id", "")
-    if usage_intake:
+    print(f"[Agent A] Blueprint: {blueprint.get('scenario', '')[:60]}...")
+
+    # Log agent runs (two steps: intake if ran, blueprint always)
+    try:
+        from observability.agent_logger import log_agent_run
+        if usage_intake:
+            await log_agent_run(
+                question_id=q_id,
+                request_id=state.get("request_id", ""),
+                agent_name="agent_a.intake",
+                usage=usage_intake,
+                status="SUCCESS",
+            )
         await log_agent_run(
-            question_id=q_id, request_id=request_id,
-            agent_name="agent_a.intake", usage=usage_intake,
-            internal_step=True,
+            question_id=q_id,
+            request_id=state.get("request_id", ""),
+            agent_name="agent_a.blueprint",
+            usage=usage_bp,
+            status="SUCCESS",
         )
-    await log_agent_run(
-        question_id=q_id, request_id=request_id,
-        agent_name="agent_a.blueprint", usage=usage_bp,
-    )
+    except Exception as e:
+        print(f"[Agent A] Observability logging notice: {e}")
 
     return {
-        "current_agent": "agent_a",
-        "updated_at":    utcnow(),
-        "requirements":  requirements,
-        "curriculum":    curriculum,
-        "client_config": client_config,
-        "blueprint":     blueprint,
+        "current_agent":  "agent_a",
+        "updated_at":     utcnow(),
+        "requirements":   requirements,
+        "curriculum":     curriculum,
+        "client_config":  client_config,
+        "blueprint":      blueprint,
     }

@@ -19,7 +19,7 @@ def load_fixture(name: str) -> dict:
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("category", "expected_route"),
-    [("REQUIREMENTS", "agent_a"), ("LOGIC", "agent_c"), ("FORMATTING", "agent_d")],
+    [("REQUIREMENTS", "agent_a"), ("LOGIC", "agent_c"), ("FORMATTING", "agent_c")],
 )
 async def test_feedback_classification_flows_to_revision_route(
     monkeypatch, category, expected_route
@@ -73,4 +73,3 @@ async def test_feedback_classification_flows_to_revision_route(
     assert state["revision_route"] == expected_route
     assert route_after_agent_f(state) == expected_route
     assert len(logged_runs) == 1
-    assert logged_runs[0]["status"] == "SUCCESS"

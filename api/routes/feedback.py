@@ -1,6 +1,6 @@
 """
 Feedback endpoint: APPROVE and REJECT.
-APPROVE -> sets status to APPROVED in DB.
+APPROVE -> sets status to APPROVED in DB, inserts Feedback audit log.
 REJECT  -> persists feedback, sets status to NEEDS_HUMAN_REVIEW, enqueues revision Celery task.
 """
 import datetime
@@ -8,14 +8,13 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import update, insert
+from sqlalchemy import update, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.deps import get_client_id, get_db
+from db.models import Question, Feedback
 
 router = APIRouter()
-
-DEV_CLIENT_UUID = "00000000-0000-0000-0000-000000000001"
 
 
 class FeedbackRequest(BaseModel):
@@ -32,24 +31,35 @@ async def submit_feedback(
 ):
     try:
         q_uuid = uuid.UUID(req.question_id)
+        c_uuid = uuid.UUID(client_id)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid question_id format")
+        raise HTTPException(status_code=400, detail="Invalid question_id or client_id format")
 
-    now = datetime.datetime.now(datetime.UTC)
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database session unavailable")
+
+    # Verify question exists and belongs to the requesting client
+    res = await db.execute(select(Question).where(Question.id == q_uuid))
+    q = res.scalar_one_or_none()
+    if not q:
+        raise HTTPException(status_code=404, detail="Question not found")
+    if q.client_id != c_uuid:
+        raise HTTPException(status_code=403, detail="Forbidden: Question belongs to a different client")
+
+    now = datetime.datetime.now(datetime.timezone.utc)
 
     if req.action == "APPROVE":
-        stmt = update(__import__("db.models", fromlist=["Question"]).Question).where(
-            __import__("db.models", fromlist=["Question"]).Question.id == q_uuid
-        ).values(status="APPROVED", updated_at=now)
+        stmt = update(Question).where(Question.id == q_uuid).values(status="APPROVED", updated_at=now)
         await db.execute(stmt)
 
-        # Insert feedback record
-        try:
-            fb_stmt = insert(__import__("db.models", fromlist=["Feedback"]).Feedback if hasattr(
-                __import__("db.models", fromlist=["Feedback"]), "Feedback") else None
-            )
-        except Exception:
-            pass  # Feedback model not yet in ORM — skip insert
+        # Insert audit record in feedbacks table
+        db.add(Feedback(
+            question_id=q_uuid,
+            client_id=c_uuid,
+            action="APPROVE",
+            feedback_text=req.feedback_text,
+            created_at=now,
+        ))
 
         await db.commit()
         return {"status": "APPROVED", "question_id": req.question_id}
@@ -58,11 +68,19 @@ async def submit_feedback(
         if not req.feedback_text.strip():
             raise HTTPException(status_code=400, detail="feedback_text required for REJECT action")
 
-        from db.models import Question
         stmt = update(Question).where(Question.id == q_uuid).values(
             status="NEEDS_HUMAN_REVIEW", updated_at=now
         )
         await db.execute(stmt)
+
+        # Insert feedback audit record
+        db.add(Feedback(
+            question_id=q_uuid,
+            client_id=c_uuid,
+            action="REJECT",
+            feedback_text=req.feedback_text,
+            created_at=now,
+        ))
         await db.commit()
 
         # Enqueue revision task
@@ -86,44 +104,15 @@ async def submit_bulk_feedback(
     client_id: str = Depends(get_client_id),
     db: AsyncSession = Depends(get_db),
 ):
-    if req.action not in ("APPROVE", "REJECT"):
-        raise HTTPException(status_code=400, detail="action must be APPROVE or REJECT")
-
-    q_uuids = []
+    results = []
     for qid in req.question_ids:
         try:
-            q_uuids.append(uuid.UUID(qid))
-        except ValueError:
-            continue
-
-    if not q_uuids:
-        raise HTTPException(status_code=400, detail="No valid question_ids provided")
-
-    now = datetime.datetime.now(datetime.UTC)
-    from db.models import Question
-
-    if req.action == "APPROVE":
-        stmt = (
-            update(Question)
-            .where(Question.id.in_(q_uuids))
-            .values(status="APPROVED", updated_at=now)
-        )
-        await db.execute(stmt)
-        await db.commit()
-        return {"status": "APPROVED", "updated_count": len(q_uuids), "question_ids": req.question_ids}
-
-    if req.action == "REJECT":
-        stmt = (
-            update(Question)
-            .where(Question.id.in_(q_uuids))
-            .values(status="NEEDS_HUMAN_REVIEW", updated_at=now)
-        )
-        await db.execute(stmt)
-        await db.commit()
-
-        # Enqueue revisions
-        from workers.tasks import run_feedback_revision
-        for qid in req.question_ids:
-            run_feedback_revision.delay(qid, req.feedback_text or "Bulk revision requested.")
-
-        return {"status": "REVISION_STARTED", "updated_count": len(q_uuids), "question_ids": req.question_ids}
+            res = await submit_feedback(
+                FeedbackRequest(question_id=qid, action=req.action, feedback_text=req.feedback_text),
+                client_id=client_id,
+                db=db,
+            )
+            results.append(res)
+        except HTTPException as e:
+            results.append({"question_id": qid, "error": e.detail, "status": "FAILED"})
+    return {"results": results}

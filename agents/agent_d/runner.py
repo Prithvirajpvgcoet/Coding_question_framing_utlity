@@ -18,8 +18,8 @@ async def run(state: QuestionStateObject) -> dict:
     q_id = state.get("question_id", "")
     print(f"[Agent D] Scoring question: {q_id}")
 
-    question = state.get("question") or state.get("generated_question", {})
-    code     = state.get("code", {}).get("solution", state.get("solution_code", ""))
+    question = state.get("question") or state.get("generated_question") or {}
+    code     = state.get("code", {}).get("solution") or state.get("solution_code") or ""
     tests    = state.get("test_cases", [])
 
     user_prompt = f"Problem:\n{question}\n\nCode:\n{code}\n\nTests:\n{tests}"
@@ -36,10 +36,13 @@ async def run(state: QuestionStateObject) -> dict:
     text = re.sub(r"\s*```$", "", text)
 
     try:
-        data    = json.loads(text)
-        scores  = data.get("scores", {"clarity": 5, "edge_cases": 5, "efficiency": 5, "formatting": 5})
+        data = json.loads(text)
+        scores = data.get("scores") or {"clarity": 5, "edge_cases": 5, "efficiency": 5, "formatting": 5}
         feedback = data.get("feedback", "")
-        avg_score = sum(scores.values()) / len(scores)
+        if scores and len(scores) > 0:
+            avg_score = float(sum(scores.values())) / float(len(scores))
+        else:
+            avg_score = 1.0
     except Exception:
         avg_score = 1.0
         scores    = {}
@@ -50,14 +53,27 @@ async def run(state: QuestionStateObject) -> dict:
         print(f"[Agent D] Kicking back to Agent C! Reason: {feedback}")
 
     # Log agent run
-    from observability.agent_logger import log_agent_run
-    await log_agent_run(
-        question_id=q_id,
-        request_id=state.get("request_id", ""),
-        agent_name="agent_d",
-        usage=usage,
-        status="SUCCESS",
-    )
+    try:
+        from observability.agent_logger import log_agent_run
+        await log_agent_run(
+            question_id=q_id,
+            request_id=state.get("request_id", ""),
+            agent_name="agent_d",
+            usage=usage,
+            status="SUCCESS",
+        )
+    except Exception as e:
+        print(f"[Agent D] Observability logging notice: {e}")
+
+    # Align score metrics with QSO schema expectations
+    qso_scores = {
+        "technical_correctness": scores.get("efficiency", scores.get("edge_cases", avg_score)),
+        "problem_clarity": scores.get("clarity", avg_score),
+        "topic_alignment": scores.get("formatting", avg_score),
+        "difficulty_accuracy": avg_score,
+        "originality": avg_score,
+        **scores,
+    }
 
     return {
         "current_agent":  "agent_d",
@@ -65,7 +81,7 @@ async def run(state: QuestionStateObject) -> dict:
         # QSO-aligned keys (used by route_after_agent_d)
         "quality": {
             "pass":            avg_score >= QUALITY_THRESHOLD,
-            "scores":          scores,
+            "scores":          qso_scores,
             "avg_score":       avg_score,
             "failure_reasons": [feedback] if feedback else [],
         },

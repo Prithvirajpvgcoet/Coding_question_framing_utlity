@@ -111,6 +111,7 @@ async def stream_progress(
                             "status":        status,
                             "retry_counts":  state.get("retry_counts", {}),
                             "error_log":     state.get("error_log", [])[-3:],  # last 3 errors only
+                            "state":         state,
                         })
                     }
                     last_agent  = agent

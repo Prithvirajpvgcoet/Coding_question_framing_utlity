@@ -1,34 +1,34 @@
 """
-LangGraph StateGraph — Consolidated 7-Agent Workflow.
-
-Main flow:     Agent A → Agent B → [Dedup] → Agent C → Agent D → Agent G → END
-Feedback flow: Agent E → Agent F → (Agent A | Agent C | Agent D) → ... → Agent G → END
+Conditional edge routing functions for the 7-agent LangGraph graph.
 """
-import datetime
 from langgraph.graph import StateGraph, END
 from orchestrator.state import QuestionStateObject
 from orchestrator import edges
 
-
-# ── Import agent run functions ────────────────────────────────────────────────
-from agents.agent_a import run as run_agent_a
-from agents.agent_b import run as run_agent_b
-from agents.agent_c import run as run_agent_c
-from agents.agent_d import run as run_agent_d
-from agents.agent_e import run as run_agent_e
-from agents.agent_f import run as run_agent_f
-from agents.agent_g import run as run_agent_g
-
-# ── Deduplication check node ──────────────────────────────────────────────────
-from agents.agent_b import run_dedup_check
+# Import runners
+from agents.agent_a.runner import run as run_agent_a
+from agents.agent_b.runner import run as run_agent_b
+from agents.agent_c.runner import run as run_agent_c
+from agents.agent_d.runner import run as run_agent_d
+from agents.agent_e.runner import run as run_agent_e
+from agents.agent_f.runner import run as run_agent_f
+from agents.agent_g.runner import run as run_agent_g
 
 
-# ── Human escalation node ─────────────────────────────────────────────────────
+async def run_dedup_check(state: QuestionStateObject) -> dict:
+    """Agent B2 - Deduplication Check against references."""
+    from agents.agent_b.runner import run_dedup
+    return await run_dedup(state)
+
+
 async def escalate_to_human(state: QuestionStateObject) -> dict:
+    """Terminal node: marks question as needing human review after retries exhausted."""
+    from agents.base import utcnow
+    print(f"[Workflow] Retries exhausted for {state.get('question_id')} — escalating to human.")
     return {
-        "status":        "NEEDS_HUMAN_REVIEW",
         "current_agent": "human_escalation",
-        "updated_at":    datetime.datetime.now(datetime.UTC).isoformat(),
+        "updated_at":    utcnow(),
+        "status":        "NEEDS_HUMAN_REVIEW",
     }
 
 
@@ -57,12 +57,12 @@ def build_graph(entry_point: str = "agent_a") -> StateGraph:
 
     # ── Dedup branch ──────────────────────────────────────────────────────────
     g.add_conditional_edges("dedup_check", edges.route_after_dedup, {
-        "agent_a": "agent_a",         # REJECT → rethink blueprint
-        "agent_c": "agent_c",         # REJECT compatibility route
-        "agent_d": "agent_d",         # Legacy route compatibility
+        "agent_a":          "agent_a",         # REJECT → rethink blueprint
+        "agent_c":          "agent_c",         # REJECT compatibility route
+        "agent_d":          "agent_d",         # Legacy route compatibility
+        "human_escalation": "human_escalation",# Rejection budget exhausted
     })
 
-    # ── Agent C → D ───────────────────────────────────────────────────────────
     # ── Agent D branch ────────────────────────────────────────────────────────
     g.add_conditional_edges("agent_d", edges.route_after_agent_d, {
         "agent_g":          "agent_g",
@@ -73,27 +73,24 @@ def build_graph(entry_point: str = "agent_a") -> StateGraph:
     # ── Agent G branch ────────────────────────────────────────────────────────
     g.add_conditional_edges("agent_g", edges.route_after_agent_g, {
         "__end__":          END,
-        "agent_a":          "agent_a",
-        "agent_c":          "agent_c",
+        "agent_a":          "agent_a",          # Score too low → regenerate from scratch
+        "agent_c":          "agent_c",          # Format/syntax fix
         "human_escalation": "human_escalation",
     })
 
-    # ── Feedback loop (triggered separately via Celery task) ──────────────────
+    # ── Human revision flow: E → F → (A, C, or D) ────────────────────────────
     g.add_edge("agent_e", "agent_f")
-
     g.add_conditional_edges("agent_f", edges.route_after_agent_f, {
         "agent_a": "agent_a",
         "agent_c": "agent_c",
         "agent_d": "agent_d",
     })
 
-    # ── Human escalation terminal ─────────────────────────────────────────────
+    # ── Escalation node ends the graph ────────────────────────────────────────
     g.add_edge("human_escalation", END)
 
     return g.compile()
 
 
-# Singleton — imported by workers/tasks.py
+# Module-level compiled graph (default full generation entry point)
 workflow = build_graph(entry_point="agent_a")
-feedback_workflow = build_graph(entry_point="agent_e")
-

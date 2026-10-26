@@ -103,15 +103,15 @@ export default function DatasetsPage() {
   };
 
   const filtered = (datasets || []).filter((doc) => {
-    if (domainFilter !== "ALL" && !doc.domain.toLowerCase().includes(domainFilter.toLowerCase())) {
+    if (domainFilter !== "ALL" && !(doc.domain || "").toLowerCase().includes(domainFilter.toLowerCase())) {
       return false;
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const matchTitle = doc.title.toLowerCase().includes(q);
-      const matchTopic = doc.topic.toLowerCase().includes(q);
+      const matchTitle = (doc.title || "").toLowerCase().includes(q);
+      const matchTopic = (doc.topic || "").toLowerCase().includes(q);
       const matchSub = (doc.subtopic || "").toLowerCase().includes(q);
-      const matchTags = (doc.tags || []).some((t) => t.toLowerCase().includes(q));
+      const matchTags = (doc.tags || []).some((t) => (t || "").toLowerCase().includes(q));
       if (!matchTitle && !matchTopic && !matchSub && !matchTags) return false;
     }
     return true;

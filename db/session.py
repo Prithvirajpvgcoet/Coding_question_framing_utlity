@@ -1,12 +1,14 @@
 import os
 from contextlib import asynccontextmanager, contextmanager
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.pool import NullPool
 from sqlalchemy import create_engine, text
 
 DATABASE_URL      = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/assessment_db")
 DATABASE_SYNC_URL = os.getenv("DATABASE_SYNC_URL", "postgresql://postgres:postgres@localhost:5432/assessment_db")
 
-async_engine      = create_async_engine(DATABASE_URL, echo=False, pool_size=10, max_overflow=20)
+# In Windows asyncio with multiple event loops (e.g. Celery asyncio.run), NullPool avoids sharing connections across dead loops
+async_engine      = create_async_engine(DATABASE_URL, echo=False, poolclass=NullPool)
 AsyncSessionLocal = async_sessionmaker(async_engine, expire_on_commit=False)
 
 sync_engine = create_engine(DATABASE_SYNC_URL, pool_size=5)

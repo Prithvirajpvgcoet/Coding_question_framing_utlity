@@ -160,7 +160,7 @@ async def upload_json_dataset(
             id=uuid.uuid4(),
             client_id=c_uuid,
             title=item.get("title", "Reference Item"),
-            doc_type=req.doc_type,
+            doc_type=item.get("doc_type", req.doc_type),
             format="json",
             topic=item.get("topic", "General"),
             subtopic=item.get("subtopic", ""),

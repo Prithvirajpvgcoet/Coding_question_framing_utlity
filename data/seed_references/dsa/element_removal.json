@@ -1,0 +1,69 @@
+[
+  {
+    "title": "Element Removal",
+    "category": "DSA",
+    "topic": "Array Operations",
+    "subtopic": "Frequency Counting",
+    "difficulty": "EASY",
+    "domain": "Core Algorithms & Platform Standards",
+    "doc_type": "AUTHORING_SPEC",
+    "retrieval_summary": "DSA array problem where you count element frequencies and remove the minimum number of elements so every frequency is divisible by K. Uses hash map for O(N) frequency counting and modulo arithmetic.",
+    "tags": ["dsa", "array-operations", "modulo", "frequency", "platform-format"],
+    "scenario": "You are given an integer array A and an integer K. Remove the minimum number of elements such that the frequency of each element is divisible by K. Find the minimum number of elements removed.",
+    "function_description": "In the provided code snippet, implement the provided elementRemoval(...) method to find the minimum number of elements removed. You can write your code in the space below the phrase \"WRITE YOUR LOGIC HERE\".\n\nThere will be multiple test cases running, so the Input and Output should match exactly as provided.\nThe base Output variable result is set to a default value -404 which can be modified. Additionally, you can add or remove these output variables.",
+    "input_format": "The first line contains an integer N, denoting the size of the integer array A.\nThe second line contains an integer K, denoting the value of the given integer.\nThe third line contains N space-separated integers of array A, denoting the elements of the array.",
+    "constraints": [
+      "1 <= N <= 1000",
+      "1 <= K <= 1000"
+    ],
+    "sample_input": "5          -- denotes N\n2          -- denotes K\n1 1 1 2 2  -- denotes A[i]",
+    "output_format": "The output contains an integer denoting the minimum number of elements removed.",
+    "sample_output": "1",
+    "explanation": "Given\n- K = 2.\n- A = [1, 1, 1, 2, 2].\nRemove one 1 from the array.\nA = [1, 1, 2, 2].\nThe frequency of each element is divisible by 2.\nThe minimum number of elements removed is 1.\nHence, the output is 1.",
+    "html_template": "<em><strong>Element Removal</strong></em><br />\n<br />\nYou are given an integer array&nbsp;<b><i>A</i></b>&nbsp;and an integer <b><i>K</i></b>.<br />\nRemove the minimum number of elements such that the frequency of each element is divisible by <b><i>K</i></b>.<br />\n<br />\n<em><strong>Find the&nbsp;minimum number of elements removed.</strong></em><br />\n<br />\n<!--[if--><strong><u>Function Description</u></strong><br />\nIn the provided code snippet, implement the provided <strong><code>elementRemoval(...)</code></strong>method to find the minimum number of elements removed.&nbsp;You can write your code in the space below the phrase <code><strong>&ldquo;</strong><strong>WRITE YOUR LOGIC HERE</strong><strong>&rdquo;</strong></code>.<br />\n<br />\nThere will be multiple test cases running, so the Input and Output should match exactly as provided.<br />\nThe base Output variable <code><strong>result</strong></code> is set to a default value <code><strong>-404</strong></code> which can be modified. Additionally, you can add or remove these output variables.<br />\n<br />\n<strong><u>Input Format</u></strong><br />\nThe first line contains an integer&nbsp;<em><strong>N</strong></em>,&nbsp;denoting the size of the integer array <em><strong>A</strong></em>.<br />\nThe second line contains an integer <em><strong>K</strong></em>, denoting the value of the given integer.<br />\nThe third line contains <em><strong>N</strong></em>&nbsp;space-separated integers of array <em><strong>A</strong></em>, denoting the elements of the array.<br />\n<!--[if--><br />\n<strong><u>Sample Input</u></strong><br />\n<div style=\"background:#eeeeee;border:1px solid #cccccc;padding:5px 10px;\">5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>-- denotes <strong>N</strong></em><br />\n2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>-- denotes <strong>K</strong></em><br />\n1 1 1 2 2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>-- denotes <strong>A[i]</strong></em></div>\n<br />\n<strong><u>Constraints</u></strong><br />\n1 &lt;= <em><strong>N</strong></em> &lt;= 1000<br />\n1 &lt;= <em><strong>K</strong></em> &lt;= 1000<br />\n<br />\n<strong><u>Output Format</u></strong><br />\nThe output contains an integer denoting the minimum number of elements removed.<br />\n<br />\n<strong><u>Sample Output</u></strong><br />\n<div style=\"background:#eeeeee;border:1px solid #cccccc;padding:5px 10px;\">1</div>\n&nbsp;<br />\n<strong><u>Explanation</u></strong><br />\nGiven<br />\n<ul>\n<li><em><strong>K</strong></em> = 2.</li>\n<li><em><strong>A</strong></em> = [1, 1, 1, 2, 2].</li>\n</ul>\nRemove one 1 from the array.<br />\n<em><strong>A</strong></em> = [1, 1, 2, 2].<br />\nThe frequency of each element is divisible by 2.<br />\nThe minimum number of elements removed is 1.<br />\n<br />\nHence, the output is <em><strong>1</strong></em>.<!--!--><!--[endif]--><!--[if--><!--[endif]--><!--!--><!--[if-->",
+    "standard_format_rules": {
+      "header_format": "<em><strong>{{question_title}}</strong></em><br />\n<br />\n{{scenario_description}}<br />\n<br />\n<em><strong>{{prompt_action_line}}</strong></em><br />\n<br />",
+      "function_description_template": "<!--[if--><strong><u>Function Description</u></strong><br />\nIn the provided code snippet, implement the provided <strong><code>{{function_name}}(...)</code></strong>method to find the {{goal}}.&nbsp;You can write your code in the space below the phrase <code><strong>&ldquo;</strong><strong>WRITE YOUR LOGIC HERE</strong><strong>&rdquo;</strong></code>.<br />\n<br />\nThere will be multiple test cases running, so the Input and Output should match exactly as provided.<br />\nThe base Output variable <code><strong>result</strong></code> is set to a default value <code><strong>-404</strong></code> which can be modified. Additionally, you can add or remove these output variables.<br />\n<br />",
+      "input_format_template": "<strong><u>Input Format</u></strong><br />\n{{input_lines_description}}<br />\n<!--[if--><br />",
+      "sample_box_style": "<div style=\"background:#eeeeee;border:1px solid #cccccc;padding:5px 10px;\">{{sample_content_with_denotes}}</div>",
+      "sample_annotations_guideline": "Each line of sample input has right-padded non-breaking spaces followed by &nbsp;&nbsp;<em>-- denotes <strong><var></strong></em>",
+      "output_format_template": "<strong><u>Output Format</u></strong><br />\n{{output_description}}<br />\n<br />",
+      "sample_output_template": "<strong><u>Sample Output</u></strong><br />\n<div style=\"background:#eeeeee;border:1px solid #cccccc;padding:5px 10px;\">{{sample_output_value}}</div>\n&nbsp;<br />",
+      "explanation_template": "<strong><u>Explanation</u></strong><br />\nGiven<br />\n<ul>\n{{given_bullet_points}}\n</ul>\n{{step_by_step_explanation}}<br />\n<br />\nHence, the output is <em><strong>{{sample_output_value}}</strong></em>.<!--!--><!--[endif]--><!--[if--><!--[endif]--><!--!--><!--[if-->"
+    },
+    "starter_code_snippets": {
+      "c": "#include <stdio.h>\n\nint elementRemoval(int N, int K, int A[]){\n\n    //this is default OUTPUT. You can change it.\n    int result = -404;\n\n    //write your Logic here:\n\n\n\n    return result;\n}\n\nint main(){\n    int N, K;\n    scanf(\"%d\", &N);\n    scanf(\"%d\", &K);\n    int A[N];\n    for(int i = 0; i < N; i++) scanf(\"%d\", &A[i]);\n    printf(\"%d\", elementRemoval(N, K, A));\n    return 0;\n}",
+      "cpp": "#include <iostream>\nusing namespace std;\n\nint elementRemoval(int N, int K, int A[]){\n\n    //this is default OUTPUT. You can change it.\n    int result = -404;\n\n    //write your Logic here:\n\n\n\n    return result;\n}\n\nint main(){\n    int N, K;\n    cin >> N >> K;\n    int A[N];\n    for(int i = 0; i < N; i++) cin >> A[i];\n    cout << elementRemoval(N, K, A);\n    return 0;\n}",
+      "python": "import sys\n\ndef elementRemoval(N: int, K: int, A: list[int]) -> int:\n    # this is default OUTPUT. You can change it.\n    result = -404\n\n    # write your Logic here:\n\n    return result\n\ndef main():\n    lines = sys.stdin.read().split()\n    if not lines:\n        return\n    N = int(lines[0])\n    K = int(lines[1])\n    A = [int(x) for x in lines[2:2 + N]]\n    print(elementRemoval(N, K, A))\n\nif __name__ == \"__main__\":\n    main()",
+      "java": "import java.util.*;\n\npublic class Solution {\n    public static int elementRemoval(int N, int K, int[] A) {\n        // this is default OUTPUT. You can change it.\n        int result = -404;\n\n        // write your Logic here:\n\n        return result;\n    }\n\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        if (!sc.hasNextInt()) return;\n        int N = sc.nextInt();\n        int K = sc.nextInt();\n        int[] A = new int[N];\n        for (int i = 0; i < N; i++) {\n            A[i] = sc.nextInt();\n        }\n        System.out.println(elementRemoval(N, K, A));\n    }\n}"
+    },
+    "solution_code": {
+      "cpp": "#include <iostream>\n#include <unordered_map>\nusing namespace std;\n\nint elementRemoval(int N, int K, int A[]){\n    int result = -404;\n    unordered_map<int, int> freq;\n    for(int i = 0; i < N; i++){\n        freq[A[i]]++;\n    }\n    result = 0;\n    for(auto &entry : freq){\n        int frequency = entry.second;\n        result += (frequency % K);\n    }\n    return result;\n}\n\nint main(){\n    int N, K;\n    if (!(cin >> N >> K)) return 0;\n    int A[N];\n    for(int i = 0; i < N; i++) cin >> A[i];\n    cout << elementRemoval(N, K, A);\n    return 0;\n}",
+      "python": "import sys\nfrom collections import Counter\n\ndef elementRemoval(N: int, K: int, A: list[int]) -> int:\n    freq = Counter(A)\n    result = 0\n    for count in freq.values():\n        result += count % K\n    return result\n\ndef main():\n    lines = sys.stdin.read().split()\n    if not lines:\n        return\n    N = int(lines[0])\n    K = int(lines[1])\n    A = [int(x) for x in lines[2:2 + N]]\n    print(elementRemoval(N, K, A))\n\nif __name__ == \"__main__\":\n    main()"
+    },
+    "test_cases": [
+      {
+        "test_case_num": 1,
+        "input": "5\n2\n1 1 1 2 2",
+        "expected_output": "1",
+        "points": 0,
+        "type": "VISIBLE"
+      },
+      {
+        "test_case_num": 2,
+        "input": "2\n1\n1 2",
+        "expected_output": "0",
+        "points": 2,
+        "type": "HIDDEN"
+      },
+      {
+        "test_case_num": 3,
+        "input": "3\n2\n1 1 1",
+        "expected_output": "1",
+        "points": 2,
+        "type": "HIDDEN"
+      }
+    ],
+    "algorithmic_pattern": "hash_map_frequency_counting"
+  }
+]

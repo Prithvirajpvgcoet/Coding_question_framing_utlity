@@ -19,6 +19,14 @@ from db.models import ReferenceDocument
 SEED_DIR = Path(__file__).resolve().parent.parent / "data" / "seed_references"
 
 
+def _clean_utf8(text: str) -> str:
+    """Strip NUL (0x00) and other invalid characters for PostgreSQL text and jsonb fields."""
+    if not text:
+        return ""
+    # PostgreSQL cannot store NUL (0x00) bytes in VARCHAR / TEXT / JSONB
+    return text.replace("\x00", "").replace("\u0000", "")
+
+
 def extract_text_from_pdf(content_bytes: bytes) -> str:
     """Extract all text from PDF bytes using pypdf with graceful fallback."""
     try:
@@ -30,13 +38,16 @@ def extract_text_from_pdf(content_bytes: bytes) -> str:
             if t and t.strip():
                 pages_text.append(t.strip())
         if pages_text:
-            return "\n\n".join(pages_text)
+            return _clean_utf8("\n\n".join(pages_text))
     except Exception as e:
         print(f"[Dataset Ingestion] pypdf extraction notice: {e}")
 
     try:
-        # Fallback text decoding in case of stream or plain text embedded
-        return content_bytes.decode("utf-8", errors="ignore").strip()
+        # Avoid decoding binary compressed streams directly into database text
+        decoded = content_bytes.decode("utf-8", errors="ignore").strip()
+        # If binary stream markers dominate, return only printable text segments
+        printable = "".join(c for c in decoded if c.isprintable() or c in ("\n", "\r", "\t"))
+        return _clean_utf8(printable)
     except Exception:
         return ""
 
@@ -57,7 +68,7 @@ def extract_text_from_docx(content_bytes: bytes) -> str:
                 if cells:
                     chunks.append(" | ".join(cells))
         if chunks:
-            return "\n\n".join(chunks)
+            return _clean_utf8("\n\n".join(chunks))
     except Exception as e:
         print(f"[Dataset Ingestion] python-docx extraction notice: {e}")
 
@@ -71,7 +82,7 @@ def extract_text_from_docx(content_bytes: bytes) -> str:
             ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
             texts = [node.text for node in tree.findall(".//w:t", ns) if node.text]
             if texts:
-                return " ".join(texts).strip()
+                return _clean_utf8(" ".join(texts).strip())
     except Exception as e:
         print(f"[Dataset Ingestion] zipfile XML extraction notice: {e}")
 
@@ -85,17 +96,11 @@ def classify_domain_and_topic(text: str) -> tuple[str, str, List[str]]:
     """
     lower = text.lower()
 
-    if any(k in lower for k in ("payment", "ledger", "fraud", "transaction", "arbitrage", "fx", "double-entry", "banking", "wallet", "stripe", "visa")):
+    if any(k in lower for k in ("fintech", "banking", "payment", "ledger", "transaction", "reconciliation", "settlement", "fraud", "card", "iban", "swift", "iso20022")):
         return (
             "FinTech & Banking",
             "Distributed Transactions & High-Frequency Systems",
             ["fintech", "payments", "ledger", "concurrency"],
-        )
-    elif any(k in lower for k in ("warehouse", "inventory", "checkout", "cart", "fulfillment", "shipment", "amr", "bin packing", "logistics", "supply chain")):
-        return (
-            "E-Commerce & Logistics",
-            "Optimization & Inventory State Machines",
-            ["ecommerce", "logistics", "inventory", "routing"],
         )
     elif any(k in lower for k in ("can-bus", "can_bus", "telemetry", "sensor", "firmware", "ecu", "automotive", "ring buffer", "dsp", "microcontroller", "embedded")):
         return (
@@ -131,7 +136,7 @@ def classify_domain_and_topic(text: str) -> tuple[str, str, List[str]]:
 
 def parse_json_content(raw_text: str) -> List[Dict[str, Any]]:
     """Parse JSON array or single object into a list of reference item dictionaries."""
-    data = json.loads(raw_text)
+    data = json.loads(_clean_utf8(raw_text))
     if isinstance(data, list):
         return data
     elif isinstance(data, dict):
@@ -143,7 +148,7 @@ def parse_json_content(raw_text: str) -> List[Dict[str, Any]]:
 
 def parse_csv_content(raw_text: str) -> List[Dict[str, Any]]:
     """Parse CSV text into structured scenario dictionaries."""
-    f = io.StringIO(raw_text)
+    f = io.StringIO(_clean_utf8(raw_text))
     reader = csv.DictReader(f)
     items = []
     for row in reader:
@@ -183,7 +188,7 @@ def parse_unstructured_document(raw_text: str, filename: str) -> List[Dict[str, 
     - Automatic keyword-based classification fallback.
     """
     clean_base_title = Path(filename).stem.replace("_", " ").replace("-", " ").title()
-    text = raw_text.strip()
+    text = _clean_utf8(raw_text.strip())
     if not text:
         return []
 
@@ -192,7 +197,6 @@ def parse_unstructured_document(raw_text: str, filename: str) -> List[Dict[str, 
     split_pattern = r"(?im)(?=(?:^|\n)(?:###?\s*)?(?:problem|scenario|question|case study)\s*[\d#A-Z]+[:\.\-])|(?:\n---+\n)"
     raw_sections = [s.strip() for s in re.split(split_pattern, text) if s and len(s.strip()) > 30]
 
-    # If splitting resulted in no discrete sections, treat whole document as one
     if not raw_sections:
         raw_sections = [text]
 
@@ -214,13 +218,11 @@ def parse_unstructured_document(raw_text: str, filename: str) -> List[Dict[str, 
             title = m_title.group(1).strip()
         else:
             first_line = sec.splitlines()[0].strip().lstrip("#").strip()
-            # If multi-section document, append section number if title is generic
-            if len(first_line) > 5 and len(first_line) <= 80:
-                title = first_line
-            elif len(raw_sections) > 1:
-                title = f"{clean_base_title} - Scenario {idx + 1}"
+            # If title extracted begins with PDF or binary markers, use filename
+            if first_line.startswith("%PDF") or len(first_line) > 80 or len(first_line) < 3:
+                title = clean_base_title if len(raw_sections) == 1 else f"{clean_base_title} - Scenario {idx + 1}"
             else:
-                title = clean_base_title
+                title = first_line
 
         # Topic & Subtopic resolution
         topic = m_topic.group(1).strip() if m_topic else inferred_topic
@@ -253,7 +255,6 @@ def parse_unstructured_document(raw_text: str, filename: str) -> List[Dict[str, 
 
 
 def parse_text_or_markdown(raw_text: str, filename: str) -> List[Dict[str, Any]]:
-    """Legacy helper: alias for parse_unstructured_document."""
     return parse_unstructured_document(raw_text, filename)
 
 
@@ -271,14 +272,14 @@ def parse_uploaded_dataset(filename: str, content_bytes: bytes, default_doc_type
         raw_text = extract_text_from_docx(content_bytes)
         items = parse_unstructured_document(raw_text, filename)
     elif ext in (".json", ".jsonl"):
-        raw_text = content_bytes.decode("utf-8", errors="replace")
+        raw_text = _clean_utf8(content_bytes.decode("utf-8", errors="replace"))
         items = parse_json_content(raw_text)
     elif ext in (".csv", ".tsv"):
-        raw_text = content_bytes.decode("utf-8", errors="replace")
+        raw_text = _clean_utf8(content_bytes.decode("utf-8", errors="replace"))
         items = parse_csv_content(raw_text)
     else:
         # Markdown (.md) or Plain Text (.txt)
-        raw_text = content_bytes.decode("utf-8", errors="replace")
+        raw_text = _clean_utf8(content_bytes.decode("utf-8", errors="replace"))
         items = parse_unstructured_document(raw_text, filename)
 
     for it in items:
@@ -323,7 +324,7 @@ async def ingest_file_content(
 
     parsed_items = parse_uploaded_dataset(filename, content_bytes, default_doc_type=doc_type)
 
-    now = datetime.datetime.now(datetime.UTC)
+    now = datetime.datetime.now(datetime.timezone.utc)
     saved_records = []
 
     for item in parsed_items:
@@ -333,23 +334,29 @@ async def ingest_file_content(
         # Deduplicate tags
         tags = list(dict.fromkeys(tags))
 
-        # Respect user-supplied custom topic or domain overrides if provided
         final_topic = custom_topic.strip() if custom_topic and custom_topic.strip() else item.get("topic", "General")
         final_domain = custom_domain.strip() if custom_domain and custom_domain.strip() else item.get("domain", "General Algorithms")
+        
+        # Clean string attributes to guarantee no NUL bytes (0x00) reach Postgres UTF-8 columns
+        clean_title = _clean_utf8(item.get("title", "Reference Scenario"))
+        clean_scenario = _clean_utf8(item.get("scenario", "") or json.dumps(item))
+
+        # Deep clean structured_data dictionary
+        clean_item = json.loads(_clean_utf8(json.dumps(item)))
 
         doc = ReferenceDocument(
             id=uuid.uuid4(),
             client_id=c_uuid,
-            title=item.get("title", "Reference Scenario"),
-            doc_type=doc_type,
+            title=clean_title,
+            doc_type=item.get("doc_type", doc_type),
             format=file_format,
             topic=final_topic,
             subtopic=item.get("subtopic", ""),
             difficulty=item.get("difficulty", "MEDIUM"),
             domain=final_domain,
             tags=tags,
-            raw_content=item.get("scenario", "") or json.dumps(item),
-            structured_data=item,
+            raw_content=clean_scenario,
+            structured_data=clean_item,
             created_at=now,
         )
 
@@ -359,12 +366,18 @@ async def ingest_file_content(
         saved_records.append({
             "id": str(doc.id),
             "title": doc.title,
+            "doc_type": item.get("doc_type", doc_type),
+            "category": item.get("category", ""),
+            "retrieval_summary": item.get("retrieval_summary", ""),
             "topic": doc.topic,
             "subtopic": doc.subtopic,
             "difficulty": doc.difficulty,
             "domain": doc.domain,
+            "scenario": clean_scenario,
+            "algorithmic_pattern": item.get("algorithmic_pattern", ""),
             "tags": doc.tags,
             "format": doc.format,
+            "structured_data": clean_item,
         })
 
     if db is not None:
@@ -373,57 +386,51 @@ async def ingest_file_content(
     return saved_records
 
 
-async def load_seed_datasets(db: Optional[AsyncSession] = None, client_id: str = "00000000-0000-0000-0000-000000000001") -> List[dict]:
+async def load_seed_datasets(
+    db: Optional[AsyncSession] = None,
+    client_id: Optional[str] = None,
+) -> List[Dict[str, Any]]:
     """
-    Reads the local seed JSON files from data/seed_references/ and loads them.
-    If db session is passed, commits to the database; otherwise returns parsed dicts.
+    Load bundled seed reference files from data/seed_references/.
+    - If db is provided: ingest/persist seed records into ReferenceDocument and commit.
+    - If db is None: returns the parsed in-memory list of seed items directly.
     """
-    all_seeds = []
+    c_uuid = client_id or "00000000-0000-0000-0000-000000000001"
+    all_records: List[Dict[str, Any]] = []
+
     if not SEED_DIR.exists():
-        return all_seeds
+        return all_records
 
-    for json_file in SEED_DIR.glob("*.json"):
+    seed_files = list(SEED_DIR.rglob("*.*"))
+
+    for fpath in seed_files:
+        if fpath.suffix.lower() not in (".json", ".csv", ".md", ".txt", ".pdf", ".docx"):
+            continue
+
+        filename = fpath.name
+        content_bytes = fpath.read_bytes()
         try:
-            with open(json_file, "r", encoding="utf-8") as f:
-                items = json.load(f)
-                if isinstance(items, list):
-                    all_seeds.extend(items)
-        except Exception as e:
-            print(f"[Dataset Ingestion] Warning reading {json_file.name}: {e}")
+            detected_doc_type = "DOMAIN_SCENARIO"
+            if fpath.suffix.lower() in (".json", ".jsonl"):
+                try:
+                    raw_json = content_bytes.decode("utf-8", errors="replace")
+                    parsed = json.loads(raw_json)
+                    if isinstance(parsed, list) and parsed:
+                        detected_doc_type = parsed[0].get("doc_type", "DOMAIN_SCENARIO")
+                    elif isinstance(parsed, dict):
+                        detected_doc_type = parsed.get("doc_type", "DOMAIN_SCENARIO")
+                except Exception:
+                    pass
 
-    if db is not None and all_seeds:
-        try:
-            c_uuid = uuid.UUID(client_id)
-        except ValueError:
-            c_uuid = uuid.UUID("00000000-0000-0000-0000-000000000001")
-
-        now = datetime.datetime.now(datetime.UTC)
-        for item in all_seeds:
-            # Check if title already exists to prevent duplicate seeding
-            res = await db.execute(
-                select(ReferenceDocument).where(
-                    ReferenceDocument.client_id == c_uuid,
-                    ReferenceDocument.title == item.get("title")
-                )
+            records = await ingest_file_content(
+                db=db,
+                client_id=str(c_uuid),
+                filename=filename,
+                content_bytes=content_bytes,
+                doc_type=detected_doc_type,
             )
-            existing = res.scalar_one_or_none()
-            if existing is None:
-                doc = ReferenceDocument(
-                    id=uuid.uuid4(),
-                    client_id=c_uuid,
-                    title=item.get("title", "Reference Scenario"),
-                    doc_type="DOMAIN_SCENARIO",
-                    format="json",
-                    topic=item.get("topic", "General"),
-                    subtopic=item.get("subtopic", ""),
-                    difficulty=item.get("difficulty", "MEDIUM"),
-                    domain=item.get("domain", ""),
-                    tags=item.get("tags", []),
-                    raw_content=item.get("scenario", "") or json.dumps(item),
-                    structured_data=item,
-                    created_at=now,
-                )
-                db.add(doc)
-        await db.commit()
+            all_records.extend(records)
+        except Exception as e:
+            print(f"[Dataset Ingestion] Error seeding file {filename}: {e}")
 
-    return all_seeds
+    return all_records

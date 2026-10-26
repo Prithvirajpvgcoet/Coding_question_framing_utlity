@@ -12,9 +12,9 @@ interface LivePreviewPanelProps {
 export function LivePreviewPanel({ state }: LivePreviewPanelProps) {
   const [activeTab, setActiveTab] = useState<string>("question");
 
-  const html = state?.html?.formatted_question || "";
-  const codeSolution = state?.code?.solution || "";
-  const codeStub = state?.code?.stub || "";
+  const html = state?.html?.formatted_question || (state as any)?.description_html || "";
+  const codeSolution = state?.code?.solution || (state as any)?.solution_code || "";
+  const codeStub = state?.code?.stub || (state as any)?.client_config?.code_template || "";
   const testCases = state?.test_cases || [];
 
   return (

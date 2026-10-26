@@ -9,6 +9,9 @@ from sqlalchemy import String, Integer, Float, DateTime, Boolean, ForeignKey, JS
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
+def utcnow():
+    return datetime.datetime.now(datetime.timezone.utc)
+
 class Base(DeclarativeBase):
     pass
 
@@ -19,8 +22,8 @@ class Client(Base):
     api_key_hash: Mapped[str] = mapped_column(String, nullable=False)
     config: Mapped[dict] = mapped_column(JSONB, default={})
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)
-    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
 class QuestionBank(Base):
     __tablename__ = "question_banks"
@@ -29,7 +32,7 @@ class QuestionBank(Base):
     name: Mapped[str] = mapped_column(String, nullable=False)
     imocha_bank_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     description: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 class Question(Base):
     __tablename__ = "questions"
@@ -39,8 +42,17 @@ class Question(Base):
     version: Mapped[int] = mapped_column(Integer, default=1)
     status: Mapped[str] = mapped_column(String, nullable=False, default="PROCESSING")
     state: Mapped[dict] = mapped_column(JSONB, default={})
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)
-    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+class Feedback(Base):
+    __tablename__ = "feedbacks"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    question_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("questions.id", ondelete="CASCADE"), nullable=False)
+    client_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("clients.id"), nullable=False)
+    action: Mapped[str] = mapped_column(String, nullable=False)  # APPROVE, REJECT
+    feedback_text: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 class QuestionVersion(Base):
     __tablename__ = "question_versions"
@@ -51,7 +63,7 @@ class QuestionVersion(Base):
     re_entry_agent: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     state_snapshot: Mapped[dict] = mapped_column(JSONB, nullable=False)
     state_diff: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 class AgentRun(Base):
     __tablename__ = "agent_runs"
@@ -69,7 +81,7 @@ class AgentRun(Base):
     retry_count: Mapped[int] = mapped_column(Integer, default=0)
     internal_step: Mapped[bool] = mapped_column(Boolean, default=False)
     error_detail: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 class UploadJob(Base):
     __tablename__ = "upload_jobs"
@@ -84,7 +96,7 @@ class UploadJob(Base):
     error: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     started_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 class ReferenceDocument(Base):
     __tablename__ = "reference_documents"
@@ -100,4 +112,4 @@ class ReferenceDocument(Base):
     tags: Mapped[list] = mapped_column(JSONB, default=[])
     raw_content: Mapped[str] = mapped_column(String, nullable=False)
     structured_data: Mapped[dict] = mapped_column(JSONB, default={})
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

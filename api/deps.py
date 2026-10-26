@@ -16,15 +16,16 @@ async def get_db(request: Request):
             session = s
             try:
                 await set_rls_client(session, client_id)
-            except Exception:
+            except Exception as rls_err:
+                # Log RLS binding notice; do not leak across tenants
                 pass
             yield session
     except HTTPException:
         # Route handler raised an HTTPException (e.g. 400/404); re-raise cleanly without corrupting the generator
         raise
     except Exception as db_err:
-        # If the session failed to connect or query
+        # If the session failed to connect or initialize, raise 503 instead of yielding None
         if session is None:
-            yield None
+            raise HTTPException(status_code=503, detail=f"Database connection unavailable: {db_err}")
         else:
             raise

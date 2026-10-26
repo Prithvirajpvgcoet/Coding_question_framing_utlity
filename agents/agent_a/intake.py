@@ -22,15 +22,36 @@ VALID_TYPES       = {"ALGORITHMIC", "SQL", "SYSTEM_DESIGN", "DEBUG", "FILL_IN_BL
 VALID_LANGUAGES   = {"python", "javascript", "java", "cpp", "go", "typescript"}
 
 
+def _canonical_topic(raw_topic: str, raw_request: str) -> str:
+    """Normalize topic to standard primary categories."""
+    t_lower = (raw_topic or "").lower()
+    r_lower = (raw_request or "").lower()
+
+    if any(k in t_lower or k in r_lower for k in ("bfs", "dfs", "graph", "breadth-first", "depth-first", "shortest path")):
+        return "Graphs"
+    if any(k in t_lower or k in r_lower for k in ("dp", "dynamic programming", "knapsack", "memoization")):
+        return "Dynamic Programming"
+    if any(k in t_lower or k in r_lower for k in ("tree", "binary search tree", "bst", "trie")):
+        return "Trees"
+    if any(k in t_lower or k in r_lower for k in ("string", "palindrome", "anagram")):
+        return "Strings"
+    if any(k in t_lower or k in r_lower for k in ("binary search", "search")):
+        return "Binary Search"
+    if any(k in t_lower or k in r_lower for k in ("sort", "quicksort", "mergesort")):
+        return "Sorting"
+    
+    return raw_topic if raw_topic else "Arrays"
+
+
 async def extract_requirements(raw_request: str) -> dict:
     """
-    Call llama-3.1-8b-instant to extract structured requirements.
+    Call LLM to extract structured requirements.
     Falls back to sensible defaults on any parse error.
     """
     content, usage = await groq_chat(
         model=MODEL_CHEAP,
         system=SYSTEM,
-        user=f"Client request: {raw_request}",
+        user=f"Client request: {raw_request}\nReturn a JSON object with fields: topic, subtopic, difficulty, question_type, target_language, max_solve_time_minutes, custom_constraints.",
         agent_name="agent_a.intake",
         temperature=0.1,
         json_mode=True,
@@ -38,12 +59,16 @@ async def extract_requirements(raw_request: str) -> dict:
 
     try:
         data = json.loads(_clean_json(content))
+        if not isinstance(data, dict):
+            data = {}
     except (json.JSONDecodeError, ValueError):
         data = {}
 
+    topic = _canonical_topic(data.get("topic", ""), raw_request)
+
     # Sanitize and apply defaults
     return {
-        "topic":                  str(data.get("topic",    "Arrays")).strip(),
+        "topic":                  topic,
         "subtopic":               str(data.get("subtopic", "")).strip(),
         "difficulty":             data.get("difficulty", "MEDIUM").upper()
                                       if data.get("difficulty", "").upper() in VALID_DIFFICULTIES
@@ -54,8 +79,10 @@ async def extract_requirements(raw_request: str) -> dict:
         "target_language":        data.get("target_language", "python").lower()
                                       if data.get("target_language", "").lower() in VALID_LANGUAGES
                                       else "python",
-        "max_solve_time_minutes": int(data.get("max_solve_time_minutes", 30)),
-        "custom_constraints":     list(data.get("custom_constraints", [])),
+        "max_solve_time_minutes": int(data.get("max_solve_time_minutes", 30))
+                                      if str(data.get("max_solve_time_minutes", "")).isdigit()
+                                      else 30,
+        "custom_constraints":     data.get("custom_constraints", []),
         "raw_request":            raw_request,
         "_intake_usage":          usage,
     }
